@@ -1,0 +1,52 @@
+/* config.h.in.  Generated from configure.in by autoheader.  */
+
+/* Define to 1 if you have the `dconfig' library (-ldconfig). */
+#undef HAVE_LIBDCONFIG
+
+/* Define to 1 if you have the `dctl' library (-ldctl). */
+#undef HAVE_LIBDCTL
+
+/* Define to 1 if you have the `filter' library (-lfilter). */
+#undef HAVE_LIBFILTER
+
+/* Define to 1 if you have the `filterexec' library (-lfilterexec). */
+#undef HAVE_LIBFILTEREXEC
+
+/* Define to 1 if you have the `hstub' library (-lhstub). */
+#undef HAVE_LIBHSTUB
+
+/* Define to 1 if you have the `log' library (-llog). */
+#undef HAVE_LIBLOG
+
+/* Define to 1 if you have the `odisk' library (-lodisk). */
+#undef HAVE_LIBODISK
+
+/* Define to 1 if you have the `searchlet' library (-lsearchlet). */
+#undef HAVE_LIBSEARCHLET
+
+/* Define to 1 if you have the `tools' library (-ltools). */
+#undef HAVE_LIBTOOLS
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Version number of package */
+#undef VERSION

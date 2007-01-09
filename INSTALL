@@ -1,0 +1,130 @@
+MATLABFind: A Diamond application for adipocyte image exploration
+Copyright (c) 2006-2007 Carnegie Mellon University. All rights reserved.
+
+
+Adam Goode
+12 Sep 2006
+
+
+MATLABFind Install Guide
+=====================
+
+This guide will help you to set up MATLABFind on your machine.
+
+
+Prerequisites
+-------------
+
+MATLABFind currently depends on a few external libraries.
+These are:
+
+ * GTK+ >= 2.8
+ * libglade2 >= 2.5.1
+ * X11 (specifically libXt)
+ * ltilib (CVS)
+ * Diamond (CVS)
+ * SnapFind >= 1.1
+
+
+GTK+ and libglade should be available on any modern Linux system,
+as well as X11. Make sure you install the development packages
+for your system, which usually end in "-devel" or "-dev".
+MATLABFind requires at least version 2.8 of GTK+ and version 2.5.1
+of libglade.
+
+
+
+ltilib is a image processing and utility library, developed at
+the Aachen University of Technology. MATLABFind uses ltilib for circle
+detection and a few other things.
+
+MATLABFind currently requires the CVS version of ltilib.
+
+ 1. Check out ltilib:
+       cvs -z3 \
+       -d:pserver:anonymous@ltilib.cvs.sourceforge.net:/cvsroot/ltilib \
+       co -P ltilib
+
+ 2. Build/install ltilib:
+       cd ltilib/linux
+       [see README for details]
+       [note that before you do "make install", you will need to
+        also build the "nv" versions of ltilib]
+       make ../lib/libltinvr.a
+       make ../lib/libltinvd.a
+       make install
+
+
+
+Diamond provides the infrastructure for interactive search.
+
+MATLABFind currently requires the CVS version of Diamond.
+
+ 1. Download the Diamond snapshot at
+    http://diamond.cs.cmu.edu/packages/diamond-1.3.cvs20060911.tar.gz
+
+ 2. Unpack, and install following directions in INSTALL.
+
+
+
+SnapFind is another Diamond application, completely separate from MATLABFind.
+
+SnapFind is needed for just one file, fil_rgb.so. Currently, the easiest
+way to build fil_rgb.so is to build SnapFind.
+
+ 1. Download Snapfind at
+    http://diamond.cs.cmu.edu/packages/snapfind_1.1.0-1.tar.gz
+
+ 2. Unpack, and build (not necessary to install) following instructions
+    in INSTALL.
+
+ 3. Look in snapfind/src/target/lib for fil_rgb.so. You will need this
+    later to drop into your build of MATLABFind.
+
+
+
+Building MATLABFind
+----------------
+
+Once all prerequisites are installed, it's time to build MATLABFind.
+
+ 1. ./configure --prefix=[someplace]
+
+ 2. make
+
+ 3. make -f Makefile.filters
+
+ 4. cp [snapfind_build_location]/src/target/lib/fil_rgb.so data/filter
+
+ 5. make install
+
+If you have any problems during any step, your prerequisites may not
+have been installed correctly.
+
+
+
+Configuration Files
+-------------------
+
+MATLABFind requires 2 files in "$HOME/.diamond", as described in
+the README file in the Diamond distribution. These files are
+"gid_map" which maps data repositories to servers, and "name_map"
+which maps text names to data repositories.
+Search for "Front-end configuration" in Diamond README for details.
+
+MATLABFind currently only searches the first entry in name_map.
+
+
+Running MATLABFind
+---------------
+
+Once everything is set up, you should be able to run MATLABFind.
+
+ 1. Start Diamond backends (adiskd).
+
+ 2. [prefix]/bin/matlabfind [calibration_image_dir]/index.txt
+
+
+
+
+Good luck!

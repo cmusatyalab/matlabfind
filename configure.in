@@ -1,0 +1,64 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(MATLABFind, 0.1)
+AC_CONFIG_SRCDIR(src)
+AM_INIT_AUTOMAKE(foreign)
+AM_CONFIG_HEADER(config.h)
+AM_MAINTAINER_MODE
+
+AC_ISC_POSIX
+AC_PROG_CC
+AM_PROG_CC_STDC
+AC_PROG_CXX
+AC_HEADER_STDC
+
+pkg_modules="gtk+-2.0 >= 2.8.0 \
+	libglade-2.0 >= 2.5.1"
+ 
+PKG_CHECK_MODULES(glade, [$pkg_modules])
+AC_SUBST(glade_CFLAGS)
+AC_SUBST(glade_LIBS)
+
+
+# XXX circular dependencies
+AC_SUBST(LIBS, "`lti-config nogtk --libs` -lpthread -lm -lsearchlet -lfilterexec -lfilter -llog -lodisk -ltools -lhstub -ldctl -ldconfig -llog -lssl")
+
+
+# XXX should use pkg-config
+AC_SUBST(LDFLAGS, "-L/opt/diamond/lib -L/usr/local/diamond/lib")
+AC_SUBST(CPPFLAGS, "-Werror-implicit-function-declaration -I/opt/diamond/include -I/usr/local/diamond/include `lti-config nogtk --cxxflags`")
+
+# XXX should work on more than 1 arch
+AC_SUBST(CFLAGS, "-m32")
+
+
+# XXX replace mains with real functions
+AC_CHECK_LIB([dconfig], [main], ,
+        [AC_MSG_ERROR(Missing libdconfig)])
+AC_CHECK_LIB([dctl], [dctl_read_char], ,
+        [AC_MSG_ERROR(Missing libdctl)])
+AC_CHECK_LIB([filter], [main], ,
+        [AC_MSG_ERROR(Missing libfilter)])
+AC_CHECK_LIB([searchlet], [main], ,
+        [AC_MSG_ERROR(Missing libsearchlet)])
+AC_CHECK_LIB([odisk], [main], ,
+        [AC_MSG_ERROR(Missing libodisk)])
+AC_CHECK_LIB([filterexec], [main], ,
+        [AC_MSG_ERROR(Missing libfilterexec)])
+AC_CHECK_LIB([hstub], [main], ,
+        [AC_MSG_ERROR(Missing libhstub)])
+AC_CHECK_LIB([log], [main], ,
+        [AC_MSG_ERROR(Missing liblog)])
+AC_CHECK_LIB([tools], [main], ,
+        [AC_MSG_ERROR(Missing libtools)])
+
+
+
+AC_OUTPUT([
+Makefile
+src/Makefile
+data/Makefile
+data/glade/Makefile
+data/filter/Makefile
+])
+
