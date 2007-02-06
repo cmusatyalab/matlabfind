@@ -26,9 +26,6 @@
 #include "util.h"
 #include "diamond_interface.h"
 
-#include "ltiHistogram.h"
-
-
 GtkListStore *found_items;
 
 static GdkPixbuf *i_pix;

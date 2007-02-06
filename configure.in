@@ -21,12 +21,12 @@ AC_SUBST(glade_LIBS)
 
 
 # XXX circular dependencies
-AC_SUBST(LIBS, "`lti-config nogtk --libs` -lpthread -lm -lsearchlet -lfilterexec -lfilter -llog -lodisk -ltools -lhstub -ldctl -ldconfig -llog -lssl")
+AC_SUBST(LIBS, "-lpthread -lm -lsearchlet -lfilterexec -lfilter -llog -lodisk -ltools -lhstub -ldctl -ldconfig -llog -lssl -lauth")
 
 
 # XXX should use pkg-config
 AC_SUBST(LDFLAGS, "-L/opt/diamond/lib -L/usr/local/diamond/lib")
-AC_SUBST(CPPFLAGS, "-Werror-implicit-function-declaration -I/opt/diamond/include -I/usr/local/diamond/include `lti-config nogtk --cxxflags`")
+AC_SUBST(CPPFLAGS, "-Werror-implicit-function-declaration -I/opt/diamond/include -I/usr/local/diamond/include")
 
 # XXX should work on more than 1 arch
 AC_SUBST(CFLAGS, "-m32")
@@ -51,6 +51,8 @@ AC_CHECK_LIB([log], [main], ,
         [AC_MSG_ERROR(Missing liblog)])
 AC_CHECK_LIB([tools], [main], ,
         [AC_MSG_ERROR(Missing libtools)])
+AC_CHECK_LIB([auth], [auth_conn_server], ,
+        [AC_MSG_ERROR(Missing libauth)])
 
 
 

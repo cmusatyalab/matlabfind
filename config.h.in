@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.in by autoheader.  */
 
+/* Define to 1 if you have the `auth' library (-lauth). */
+#undef HAVE_LIBAUTH
+
 /* Define to 1 if you have the `dconfig' library (-ldconfig). */
 #undef HAVE_LIBDCONFIG
 
