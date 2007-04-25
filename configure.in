@@ -14,46 +14,25 @@ AC_HEADER_STDC
 
 pkg_modules="gtk+-2.0 >= 2.8.0 \
 	libglade-2.0 >= 2.5.1"
- 
+
 PKG_CHECK_MODULES(GLADE, [$pkg_modules])
 AC_SUBST(GLADE_CFLAGS)
 AC_SUBST(GLADE_LIBS)
 
+PKG_CHECK_MODULES(OPENDIAMOND, [opendiamond])
+AC_SUBST(OPENDIAMOND_CFLAGS)
+AC_SUBST(OPENDIAMOND_LIBS)
 
-# XXX circular dependencies
-AC_SUBST(LIBS, "-lpthread -lm -lsearchlet -lfilterexec -lfilter -llog -lodisk -ltools -lhstub -ldctl -ldconfig -llog -lssl -lauth")
+AC_SEARCH_LIBS([sqrt], [m],, AC_MSG_FAILURE([cannot find math library]))
+AC_SEARCH_LIBS([pthread_create],
+	[pthread],, AC_MSG_FAILURE([cannot find pthread_create function]))
 
 
-# XXX should use pkg-config
-AC_SUBST(LDFLAGS, "-L/opt/diamond/lib -L/usr/local/diamond/lib")
-AC_SUBST(CPPFLAGS, "-Werror-implicit-function-declaration -I/opt/diamond/include -I/usr/local/diamond/include")
+
+AC_SUBST(AM_CPPFLAGS, "-Werror-implicit-function-declaration `lti-config nogtk --cxxflags`")
 
 # XXX should work on more than 1 arch
-AC_SUBST(CFLAGS, "-m32")
-
-
-# XXX replace mains with real functions
-AC_CHECK_LIB([dconfig], [main], ,
-        [AC_MSG_ERROR(Missing libdconfig)])
-AC_CHECK_LIB([dctl], [dctl_read_char], ,
-        [AC_MSG_ERROR(Missing libdctl)])
-AC_CHECK_LIB([filter], [main], ,
-        [AC_MSG_ERROR(Missing libfilter)])
-AC_CHECK_LIB([searchlet], [main], ,
-        [AC_MSG_ERROR(Missing libsearchlet)])
-AC_CHECK_LIB([odisk], [main], ,
-        [AC_MSG_ERROR(Missing libodisk)])
-AC_CHECK_LIB([filterexec], [main], ,
-        [AC_MSG_ERROR(Missing libfilterexec)])
-AC_CHECK_LIB([hstub], [main], ,
-        [AC_MSG_ERROR(Missing libhstub)])
-AC_CHECK_LIB([log], [main], ,
-        [AC_MSG_ERROR(Missing liblog)])
-AC_CHECK_LIB([tools], [main], ,
-        [AC_MSG_ERROR(Missing libtools)])
-AC_CHECK_LIB([auth], [auth_conn_server], ,
-        [AC_MSG_ERROR(Missing libauth)])
-
+AC_SUBST(AM_CFLAGS, "-m32")
 
 
 AC_OUTPUT([
@@ -63,4 +42,3 @@ data/Makefile
 data/glade/Makefile
 data/filter/Makefile
 ])
-

@@ -4,4 +4,4 @@ MATLAB_INCLUDEDIR=${MATLAB_ROOT_DIR}/extern/include
 MATLAB_EXE_PATH=${MATLAB_ROOT_DIR}/bin/matlab
 
 data/filter/fil_matlab_exec.so: src/fil_matlab_exec.c src/quick_tar.h src/quick_tar.c
-	gcc -fPIC -I/opt/diamond/include -I/usr/local/diamond/include -I${MATLAB_INCLUDEDIR} -L${MATLAB_LIBDIR} -O2 -g -m32 -Wall -shared  -o $@ src/fil_matlab_exec.c src/quick_tar.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -leng -lmx -lut -Xlinker -rpath -Xlinker ${MATLAB_LIBDIR}
+	gcc -fPIC `pkg-config opendiamond --cflags` -I${MATLAB_INCLUDEDIR} -L${MATLAB_LIBDIR} -O2 -g -m32 -Wall -shared  -o $@ src/fil_matlab_exec.c src/quick_tar.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -leng -lmx -lut -Xlinker -rpath -Xlinker ${MATLAB_LIBDIR}

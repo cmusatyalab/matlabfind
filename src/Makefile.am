@@ -8,7 +8,7 @@ INCLUDES = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	-DMATLABFIND_GLADEDIR=\""$(gladedir)"\" \
 	-DMATLABFIND_FILTERDIR=\""$(filterdir)"\" \
-	@GLADE_CFLAGS@
+	@OPENDIAMOND_CFLAGS@ @GLADE_CFLAGS@
 
 bin_PROGRAMS = matlabfind
 
@@ -20,6 +20,6 @@ matlabfind_SOURCES = \
 	quick_tar.c quick_tar.h \
 	diamond_interface.c diamond_interface.h
 
-matlabfind_LDADD = @GLADE_LIBS@
+matlabfind_LDADD = @OPENDIAMOND_LIBS@ @GLADE_LIBS@
 
 matlabfind_LDFLAGS = -export-dynamic
