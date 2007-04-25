@@ -36,7 +36,7 @@ POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure depcomp install-sh missing
+	$(top_srcdir)/configure INSTALL depcomp install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -92,6 +92,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+GLADE_CFLAGS = @GLADE_CFLAGS@
+GLADE_LIBS = @GLADE_LIBS@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -134,8 +136,6 @@ bindir = @bindir@
 build_alias = @build_alias@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
-glade_CFLAGS = @glade_CFLAGS@
-glade_LIBS = @glade_LIBS@
 host_alias = @host_alias@
 includedir = @includedir@
 infodir = @infodir@

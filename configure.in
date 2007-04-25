@@ -15,9 +15,9 @@ AC_HEADER_STDC
 pkg_modules="gtk+-2.0 >= 2.8.0 \
 	libglade-2.0 >= 2.5.1"
  
-PKG_CHECK_MODULES(glade, [$pkg_modules])
-AC_SUBST(glade_CFLAGS)
-AC_SUBST(glade_LIBS)
+PKG_CHECK_MODULES(GLADE, [$pkg_modules])
+AC_SUBST(GLADE_CFLAGS)
+AC_SUBST(GLADE_LIBS)
 
 
 # XXX circular dependencies
