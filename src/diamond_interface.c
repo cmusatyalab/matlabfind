@@ -167,10 +167,10 @@ static ls_search_handle_t generic_search (char *filter_spec_name) {
   close(f2);
 
   // check for snapfind filter
-  if (access("/opt/snapfind/lib/fil_rgb.a", F_OK) == 0) {
-    rgb_filter_name = "/opt/snapfind/lib/fil_rgb.a";
-  } else if (access("/usr/local/diamond/lib/fil_rgb.a", F_OK) == 0) {
-    rgb_filter_name = "/usr/local/diamond/lib/fil_rgb.a";
+  if (access("/opt/snapfind/lib/fil_rgb.so", F_OK) == 0) {
+    rgb_filter_name = "/opt/snapfind/lib/fil_rgb.so";
+  } else if (access("/usr/local/diamond/lib/fil_rgb.so", F_OK) == 0) {
+    rgb_filter_name = "/usr/local/diamond/lib/fil_rgb.so";
   } else {
     // old way
     rgb_filter_name = MATLABFIND_FILTERDIR "/fil_rgb.so";
