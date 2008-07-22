@@ -15,7 +15,7 @@ bin_PROGRAMS = matlabfind
 matlabfind_SOURCES = \
 	main.c matlabfind.h \
 	define.c define.h \
-	investigate.cpp investigate.h \
+	investigate.c investigate.h \
 	util.c util.h \
 	quick_tar.c quick_tar.h \
 	diamond_interface.c diamond_interface.h
