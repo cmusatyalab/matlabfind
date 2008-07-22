@@ -29,7 +29,7 @@ AC_SEARCH_LIBS([pthread_create],
 
 
 
-AC_SUBST(AM_CPPFLAGS, "-Werror-implicit-function-declaration `lti-config nogtk --cxxflags`")
+AC_SUBST(AM_CPPFLAGS, "-Werror-implicit-function-declaration")
 
 # XXX should work on more than 1 arch
 AC_SUBST(AM_CFLAGS, "-m32")
