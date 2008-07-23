@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <limits.h>
 
 #ifndef MATLAB_EXE_PATH
 #error Must specify MATLAB_EXE_PATH as compilation flag
