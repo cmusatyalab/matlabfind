@@ -78,7 +78,7 @@ static Engine *open_engine_in_src_dir(const char *src_dir_name)
    clearenv();
 
    printf("Trying to do an engOpen\n");
-   ret = engOpen(MATLAB_EXE_PATH);
+   ret = engOpen("i386 " MATLAB_EXE_PATH);
    printf("engOpen done\n");
 
    if (chdir(current_path) < 0) {
