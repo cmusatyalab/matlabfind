@@ -157,7 +157,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
       return -1;
    }
 
-   printf("Running init function in MTALAB\n");
+   printf("Running init function in MATLAB\n");
 
    engEvalString(inst->eng, inst->init_matlab_cmd);
 
