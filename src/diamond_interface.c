@@ -38,8 +38,6 @@ int dropped_objects;
 
 int displayed_objects;
 
-static GSList *collection_menu_group;
-
 static void update_gids(void) {
   int i, j;
 
@@ -60,22 +58,6 @@ static void update_gids(void) {
   }
 }
 
-static void scope_menu_item_activated(GtkMenuItem *menuitem, gpointer user_data) {
-  GtkCheckMenuItem *m = GTK_CHECK_MENU_ITEM(menuitem);
-  int length = g_slist_length(collection_menu_group);
-  int position = (length - 1) - g_slist_index(collection_menu_group, m);
-
-  // update active
-  collections[position].active = m->active;
-  if (m->active) {
-    g_debug("collection %d (%s) added", position, collections[position].name);
-  } else {
-    g_debug("collection %d (%s) removed", position, collections[position].name);
-  }
-  update_gids();
-}
-
-
 void diamond_init(void) {
   int i;
   int j;
@@ -83,51 +65,25 @@ void diamond_init(void) {
   void *cookie;
   char *name;
 
-  GtkMenuShell *menu;
-  GtkMenuItem *scopeMenu;
-
-  static gboolean initialized;
-
-  if (initialized) {
-    // already initialized
-    return;
-  }
-  initialized = TRUE;
-
-  scopeMenu = GTK_MENU_ITEM(glade_xml_get_widget(g_xml, "scopeMenu"));
-  menu = GTK_MENU_SHELL(gtk_menu_new());
-  gtk_menu_item_set_submenu(scopeMenu, GTK_WIDGET(menu));
-
   printf("reading collections...\n");
   {
     int pos = 0;
-    GtkWidget *mi = NULL;
 
     err = nlkup_first_entry(&name, &cookie);
     while(!err && pos < MAX_ALBUMS) {
 
+      printf(" collection %2d: %s\n", pos, name);
       collections[pos].name = name;
-      mi = gtk_radio_menu_item_new_with_label(collection_menu_group,
-					      name);
-      collection_menu_group = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM(mi));
-      gtk_menu_shell_prepend(menu, mi);
-      collections[pos].active = 0;
+      collections[pos].active = (pos == 0) ? 1 : 0;
 
-      g_signal_connect(mi, "activate", G_CALLBACK(scope_menu_item_activated),
-		       NULL);
       pos++;
       err = nlkup_next_entry(&name, &cookie);
     }
 
-    if (mi != NULL) {
-      // set the last (first) item active
-      collections[pos-1].active = 1;
-      gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(mi),
-				     TRUE);
-      scope_menu_item_activated(GTK_MENU_ITEM(mi), NULL);
-    }
     collections[pos].name = NULL;
   }
+
+  update_gids();
 }
 
 static ls_search_handle_t generic_search (char *filter_spec_name) {

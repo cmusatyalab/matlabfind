@@ -25,6 +25,7 @@
 #include "investigate.h"
 #include "util.h"
 #include "diamond_interface.h"
+#include "lib_scope.h"
 
 GtkListStore *found_items;
 
@@ -240,4 +241,10 @@ void on_searchResults_selection_changed (GtkIconView *view,
   draw_investigate_offscreen_items(w->allocation.width,
 				   w->allocation.height);
 
+}
+
+void on_defineScope_clicked (GtkButton *button,
+			     gpointer user_data) {
+  ls_define_scope();
+  diamond_init();
 }

@@ -62,6 +62,9 @@ extern "C" {
 
   void on_generateHistogram_clicked (GtkButton *button,
 				     gpointer user_data);
+
+  void on_defineScope_clicked (GtkButton *button,
+			       gpointer user_data);
 #ifdef __cplusplus
 }
 #endif

@@ -57,14 +57,6 @@
 	  </child>
 
 	  <child>
-	    <widget class="GtkMenuItem" id="scopeMenu">
-	      <property name="visible">True</property>
-	      <property name="label" translatable="yes">_Scope</property>
-	      <property name="use_underline">True</property>
-	    </widget>
-	  </child>
-
-	  <child>
 	    <widget class="GtkMenuItem" id="help1">
 	      <property name="visible">True</property>
 	      <property name="label" translatable="yes">_Help</property>
@@ -578,8 +570,8 @@
 				  <child>
 				    <widget class="GtkHButtonBox" id="hbuttonbox2">
 				      <property name="visible">True</property>
-				      <property name="layout_style">GTK_BUTTONBOX_SPREAD</property>
-				      <property name="spacing">40</property>
+				      <property name="layout_style">GTK_BUTTONBOX_DEFAULT_STYLE</property>
+				      <property name="spacing">0</property>
 
 				      <child>
 					<widget class="GtkButton" id="startSearch">
@@ -653,6 +645,19 @@
 					      </child>
 					    </widget>
 					  </child>
+					</widget>
+				      </child>
+
+				      <child>
+					<widget class="GtkButton" id="defineScope">
+					  <property name="visible">True</property>
+					  <property name="can_default">True</property>
+					  <property name="can_focus">True</property>
+					  <property name="label" translatable="yes">Define Scope</property>
+					  <property name="use_underline">True</property>
+					  <property name="relief">GTK_RELIEF_NORMAL</property>
+					  <property name="focus_on_click">True</property>
+					  <signal name="clicked" handler="on_defineScope_clicked" last_modification_time="Wed, 23 Jul 2008 20:51:48 GMT"/>
 					</widget>
 				      </child>
 				    </widget>
@@ -943,71 +948,11 @@
 		      <property name="right_padding">0</property>
 
 		      <child>
-			<widget class="GtkTable" id="table3">
+			<widget class="GtkDrawingArea" id="selectedResult">
 			  <property name="visible">True</property>
-			  <property name="n_rows">2</property>
-			  <property name="n_columns">2</property>
-			  <property name="homogeneous">False</property>
-			  <property name="row_spacing">0</property>
-			  <property name="column_spacing">0</property>
-
-			  <child>
-			    <widget class="GtkDrawingArea" id="selectedResult">
-			      <property name="visible">True</property>
-			      <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK</property>
-			      <signal name="expose_event" handler="on_selectedResult_expose_event" last_modification_time="Wed, 06 Sep 2006 06:53:01 GMT"/>
-			      <signal name="button_press_event" handler="on_selectedResult_button_press_event" last_modification_time="Wed, 06 Sep 2006 06:53:48 GMT"/>
-			      <signal name="button_release_event" handler="on_selectedResult_button_release_event" last_modification_time="Wed, 06 Sep 2006 06:53:52 GMT"/>
-			      <signal name="motion_notify_event" handler="on_selectedResult_motion_notify_event" last_modification_time="Wed, 06 Sep 2006 06:56:55 GMT"/>
-			      <signal name="configure_event" handler="on_selectedResult_configure_event" last_modification_time="Wed, 06 Sep 2006 06:57:12 GMT"/>
-			      <signal name="enter_notify_event" handler="on_selectedResult_enter_notify_event" last_modification_time="Wed, 06 Sep 2006 08:30:25 GMT"/>
-			      <signal name="leave_notify_event" handler="on_selectedResult_leave_notify_event" last_modification_time="Wed, 06 Sep 2006 08:30:30 GMT"/>
-			    </widget>
-			    <packing>
-			      <property name="left_attach">1</property>
-			      <property name="right_attach">2</property>
-			      <property name="top_attach">1</property>
-			      <property name="bottom_attach">2</property>
-			    </packing>
-			  </child>
-
-			  <child>
-			    <widget class="GtkVRuler" id="resultVRuler">
-			      <property name="visible">True</property>
-			      <property name="metric">GTK_PIXELS</property>
-			      <property name="lower">0</property>
-			      <property name="upper">10</property>
-			      <property name="position">0</property>
-			      <property name="max_size">10</property>
-			    </widget>
-			    <packing>
-			      <property name="left_attach">0</property>
-			      <property name="right_attach">1</property>
-			      <property name="top_attach">1</property>
-			      <property name="bottom_attach">2</property>
-			      <property name="x_options">fill</property>
-			      <property name="y_options">fill</property>
-			    </packing>
-			  </child>
-
-			  <child>
-			    <widget class="GtkHRuler" id="resultHRuler">
-			      <property name="visible">True</property>
-			      <property name="metric">GTK_PIXELS</property>
-			      <property name="lower">0</property>
-			      <property name="upper">10</property>
-			      <property name="position">6.10236215591</property>
-			      <property name="max_size">10</property>
-			    </widget>
-			    <packing>
-			      <property name="left_attach">1</property>
-			      <property name="right_attach">2</property>
-			      <property name="top_attach">0</property>
-			      <property name="bottom_attach">1</property>
-			      <property name="x_options">fill</property>
-			      <property name="y_options">fill</property>
-			    </packing>
-			  </child>
+			  <property name="events">GDK_POINTER_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK</property>
+			  <signal name="expose_event" handler="on_selectedResult_expose_event" last_modification_time="Wed, 06 Sep 2006 06:53:01 GMT"/>
+			  <signal name="configure_event" handler="on_selectedResult_configure_event" last_modification_time="Wed, 06 Sep 2006 06:57:12 GMT"/>
 			</widget>
 		      </child>
 		    </widget>
@@ -1081,57 +1026,8 @@
   </child>
 </widget>
 
-<widget class="GtkWindow" id="histogramWindow">
-  <property name="title" translatable="yes">Histogram Report</property>
-  <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
-  <property name="modal">False</property>
-  <property name="default_width">400</property>
-  <property name="default_height">550</property>
-  <property name="resizable">True</property>
-  <property name="destroy_with_parent">False</property>
-  <property name="decorated">True</property>
-  <property name="skip_taskbar_hint">False</property>
-  <property name="skip_pager_hint">False</property>
-  <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
-  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
-  <property name="focus_on_map">True</property>
-  <property name="urgency_hint">False</property>
-  <signal name="delete_event" handler="gtk_widget_hide" last_modification_time="Wed, 06 Sep 2006 16:54:32 GMT"/>
-
-  <child>
-    <widget class="GtkScrolledWindow" id="scrolledwindow12">
-      <property name="visible">True</property>
-      <property name="can_focus">True</property>
-      <property name="hscrollbar_policy">GTK_POLICY_ALWAYS</property>
-      <property name="vscrollbar_policy">GTK_POLICY_ALWAYS</property>
-      <property name="shadow_type">GTK_SHADOW_IN</property>
-      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
-
-      <child>
-	<widget class="GtkTextView" id="histogram">
-	  <property name="visible">True</property>
-	  <property name="can_focus">True</property>
-	  <property name="editable">False</property>
-	  <property name="overwrite">False</property>
-	  <property name="accepts_tab">True</property>
-	  <property name="justification">GTK_JUSTIFY_LEFT</property>
-	  <property name="wrap_mode">GTK_WRAP_NONE</property>
-	  <property name="cursor_visible">True</property>
-	  <property name="pixels_above_lines">0</property>
-	  <property name="pixels_below_lines">0</property>
-	  <property name="pixels_inside_wrap">0</property>
-	  <property name="left_margin">0</property>
-	  <property name="right_margin">0</property>
-	  <property name="indent">0</property>
-	  <property name="text" translatable="yes"></property>
-	</widget>
-      </child>
-    </widget>
-  </child>
-</widget>
-
 <widget class="GtkAboutDialog" id="aboutdialog1">
+  <property name="border_width">5</property>
   <property name="destroy_with_parent">False</property>
   <property name="name" translatable="yes">MATLABFind</property>
   <property name="copyright" translatable="yes">Copyright © 2006-2007 Carnegie Mellon University</property>
