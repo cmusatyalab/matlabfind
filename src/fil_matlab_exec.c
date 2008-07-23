@@ -12,14 +12,6 @@
  *  RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
  */
 
-#define _XOPEN_SOURCE
-
-#include "engine.h"
-#include "matrix.h"
-
-#include "lib_filter.h"
-#include "quick_tar.h"
-
 #include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -29,6 +21,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits.h>
+
+#include "engine.h"
+#include "matrix.h"
+
+#include "lib_filter.h"
+#include "quick_tar.h"
 
 #ifndef MATLAB_EXE_PATH
 #error Must specify MATLAB_EXE_PATH as compilation flag
