@@ -12,6 +12,8 @@
  *  RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
  */
 
+#define _XOPEN_SOURCE
+
 #include "engine.h"
 #include "matrix.h"
 
@@ -72,6 +74,9 @@ static Engine *open_engine_in_src_dir(const char *src_dir_name)
    if (chdir(src_dir_name) < 0) {
       return NULL;
    }
+
+   // try to not have MATLAB screw up with LS_COLORS or other things
+   clearenv();
 
    printf("Trying to do an engOpen\n");
    ret = engOpen(MATLAB_EXE_PATH);
