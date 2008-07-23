@@ -1,4 +1,4 @@
-MATLAB_ROOT_DIR=/afs/cs.cmu.edu/local/matlab/i386_fc3/7.3/lib/matlab7
+MATLAB_ROOT_DIR=/afs/cs.cmu.edu/local/matlab/i386_fc5/7.6/lib/matlab7
 MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
 MATLAB_INCLUDEDIR=${MATLAB_ROOT_DIR}/extern/include
 MATLAB_EXE_PATH=${MATLAB_ROOT_DIR}/bin/matlab
