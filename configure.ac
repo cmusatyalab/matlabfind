@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(MATLABFind, 0.1)
+AC_INIT(MATLABFind, 1.0.2)
 AC_CONFIG_SRCDIR(src)
 AM_INIT_AUTOMAKE(foreign)
 AM_CONFIG_HEADER(config.h)
