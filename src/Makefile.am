@@ -23,3 +23,6 @@ matlabfind_SOURCES = \
 matlabfind_LDADD = @OPENDIAMOND_LIBS@ @GLADE_LIBS@
 
 matlabfind_LDFLAGS = -export-dynamic
+
+
+EXTRA_DIST = fil_matlab_exec.c
