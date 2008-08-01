@@ -6,6 +6,10 @@ AM_INIT_AUTOMAKE(foreign)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC_C99
+AC_PROG_CXX
+
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
 
 pkg_modules="gtk+-2.0 >= 2.8.0 \
 	libglade-2.0 >= 2.5.1"

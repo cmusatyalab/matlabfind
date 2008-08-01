@@ -24,5 +24,10 @@ matlabfind_LDADD = @OPENDIAMOND_LIBS@ @GLADE_LIBS@
 
 matlabfind_LDFLAGS = -export-dynamic
 
+lib_LTLIBRARIES = libmatlab_search.la
+
+libmatlab_search_la_SOURCES = matlab_search.cc
+
+libmatlab_search_la_CPPFLAGS = -I/opt/snapfind/include
 
 EXTRA_DIST = fil_matlab_exec.c

@@ -6,6 +6,11 @@ Makefile.in
 /install-sh
 /missing
 /depcomp
+/libtool
+/ltmain.sh
+
+.deps
+.libs
 
 *~
 *.bak
@@ -14,8 +19,12 @@ Makefile.in
 *.a
 *.Po
 *.Tpo
+*.loT
+*.lo
+*.la
 
 /src/matlabfind
+/src/matlab.sf_conf
 /aclocal.m4
 
 /stamp*
