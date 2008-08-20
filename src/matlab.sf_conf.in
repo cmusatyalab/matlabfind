@@ -1,2 +1,0 @@
-GUI_LIB		./matlab.so
-SEARCHLET_LIB	@datadir@/fil_matlab_exec.so

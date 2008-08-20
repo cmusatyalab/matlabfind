@@ -24,7 +24,6 @@ Makefile.in
 *.la
 
 /src/matlabfind
-/src/matlab.sf_conf
 /aclocal.m4
 
 /stamp*

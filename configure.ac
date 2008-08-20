@@ -26,7 +26,6 @@ AC_SUBST(AM_CFLAGS, "-m32")
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-src/matlab.sf_conf
 data/Makefile
 data/glade/Makefile
 data/filter/Makefile
