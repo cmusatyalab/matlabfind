@@ -47,7 +47,7 @@ void search_init();
  * Initialization function that creates the factory and registers
  * it with the rest of the UI.
  */
-void 
+void
 search_init()
 {
 	matlab_factory *fac;
@@ -66,6 +66,7 @@ matlab_search::matlab_search(const char *name, char *descr)
 	source_folder = NULL;
 
 	edit_window = NULL;
+
 	return;
 }
 
@@ -348,4 +349,3 @@ matlab_search::region_match(RGBImage *img, bbox_list_t *blist)
 {
 	return;
 }
-
