@@ -24,8 +24,8 @@ matlabfind_LDADD = @OPENDIAMOND_LIBS@ @GLADE_LIBS@
 
 matlabfind_LDFLAGS = -export-dynamic
 
-pkglib_LTLIBRARIES = libmatlab_search.la 
-pkglib_LIBRARIES = matlab.sf_conf
+pkglib_LTLIBRARIES = libmatlab_search.la
+pkglib_DATA = matlab.sf_conf
 
 libmatlab_search_la_SOURCES = matlab_search.cc
 
