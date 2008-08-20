@@ -3,6 +3,7 @@
  *  A Diamond application for interoperating with MATLAB
  *  Version 1
  *
+ *  Copyright (c) 2002-2005 Intel Corporation
  *  Copyright (c) 2008 Carnegie Mellon University
  *  All Rights Reserved.
  *
@@ -28,11 +29,11 @@
 #define	MAX_DISPLAY_NAME	64
 
 /* config file tokens that we write out */
-#define SEARCH_NAME     "text_attr"
-#define ATTR_NAME_ID    "ATTR_NAME"
-#define STRING_ID    	"STRING"
-#define DROP_MISSING_ID "DROP_MISSING"
-#define EXACT_MATCH_ID 	"EXACT_MATCH"
+#define SEARCH_NAME     "matlab_search"
+#define EVAL_FUNCTION_ID    "EVAL_FUNCTION"
+#define INIT_FUNCTION_ID    	"INIT_FUNCTION"
+#define THRESHOLD_ID "THRESHOLD"
+#define SOURCE_FOLDER_ID 	"SOURCE_FOLDER"
 
 
 
@@ -47,59 +48,69 @@ void search_init();
 void 
 search_init()
 {
-	text_attr_factory *fac;
-	fac = new text_attr_factory;
+	matlab_factory *fac;
+	fac = new matlab_factory;
 	factory_register(fac);
 }
 
 
 
-text_attr_search::text_attr_search(const char *name, char *descr)
+matlab_search::matlab_search(const char *name, char *descr)
 		: img_search(name, descr)
 {
+	eval_function = NULL;
+	init_function = NULL;
+	threshold = NULL;
+	source_folder = NULL;
+
 	edit_window = NULL;
-	search_string = NULL;
-	attr_name = NULL;
-	drop_missing = 0;
-	exact_match = 1;
 	return;
 }
 
-text_attr_search::~text_attr_search()
+matlab_search::~matlab_search()
 {
-	if (search_string) {
-		free(search_string);
+	if (eval_function) {
+		free(eval_function);
 	}
-	if (attr_name) {
-		free(attr_name);
+	if (init_function) {
+		free(init_function);
 	}
+	if (threshold) {
+		free(threshold);
+	}
+	if (source_folder) {
+		free(source_folder);
+	}
+
+	free(get_auxiliary_data());
 	return;
 }
 
 
 int
-text_attr_search::handle_config(int nconf, char **data)
+matlab_search::handle_config(int nconf, char **data)
 {
 	int	err;
 
-	if (strcmp(ATTR_NAME_ID, data[0]) == 0) {
+	if (strcmp(EVAL_FUNCTION_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		attr_name = strdup(data[1]);
-		assert(attr_name != NULL);
+		eval_function = strdup(data[1]);
+		assert(eval_function != NULL);
 		err = 0;
-
-	} else if (strcmp(STRING_ID, data[0]) == 0) {
+	} else if (strcmp(INIT_FUNCTION_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		search_string = strdup(data[1]);
-		assert(search_string != NULL);
+		init_function = strdup(data[1]);
+		assert(init_function != NULL);
 		err = 0;
-	} else if (strcmp(DROP_MISSING_ID, data[0]) == 0) {
+	} else if (strcmp(THRESHOLD_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		drop_missing = atoi(data[1]);
+		threshold = strdup(data[1]);
+		assert(threshold != NULL);
 		err = 0;
-	} else if (strcmp(EXACT_MATCH_ID, data[0]) == 0) {
+	} else if (strcmp(SOURCE_FOLDER_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		exact_match = atoi(data[1]);
+		source_folder = strdup(data[1]);
+		assert(source_folder != NULL);
 		err = 0;
 	} else {
 		err = img_search::handle_config(nconf, data);
@@ -119,14 +130,14 @@ cb_edit_done(GtkButton *item, gpointer data)
 static void
 cb_close_edit_window(GtkWidget* item, gpointer data)
 {
-	text_attr_search *    search;
-	search = (text_attr_search *)data;
+	matlab_search *    search;
+	search = (matlab_search *)data;
 	search->close_edit_win();
 }
 
 
 void
-text_attr_search::edit_search()
+matlab_search::edit_search()
 {
 	GtkWidget *     widget;
 	GtkWidget *     box;
@@ -177,42 +188,46 @@ text_attr_search::edit_search()
         gtk_container_set_border_width(GTK_CONTAINER(table), 10);
 	gtk_box_pack_start(GTK_BOX(box), table, FALSE, TRUE, 0);
 
-	/* set the first row label and text entry for the attribute name */
-	widget = gtk_label_new("Attribute Name");
+	/* set the first row label and text entry for the eval function */
+	widget = gtk_label_new("Eval function");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
-	attr_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), attr_entry, 1, 2, 0, 1);
-	if (attr_name != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(attr_entry), attr_name);
+	eval_function_entry = gtk_entry_new();
+	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_entry, 1, 2, 0, 1);
+	if (eval_function != NULL) {
+		gtk_entry_set_text(GTK_ENTRY(eval_function_entry), eval_function);
 	}
 
-	/* set the second row label and text entry for the search string */
-	widget = gtk_label_new("String");
+	/* set the second row label and text entry for the init function */
+	widget = gtk_label_new("Init function");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
-	string_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), string_entry, 1, 2, 1, 2);
-	if (search_string != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(string_entry), search_string);
+	init_function_entry = gtk_entry_new();
+	gtk_table_attach_defaults(GTK_TABLE(table), init_function_entry, 1, 2, 1, 2);
+	if (init_function != NULL) {
+		gtk_entry_set_text(GTK_ENTRY(init_function_entry), init_function);
 	}
 
-	/* add label and checkbox to pass/drop objet without named attribute */
-	widget = gtk_label_new("Drop missing");
+	/* set the third row label and text entry for the threshold */
+	widget = gtk_label_new("Threshold");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 2, 3);
-        drop_cb = gtk_check_button_new();
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(drop_cb), drop_missing);
-	gtk_table_attach_defaults(GTK_TABLE(table), drop_cb, 1, 2, 2, 3);
+	threshold_entry = gtk_entry_new();
+	gtk_table_attach_defaults(GTK_TABLE(table), threshold_entry, 1, 2, 2, 3);
+	if (threshold != NULL) {
+		gtk_entry_set_text(GTK_ENTRY(threshold_entry), threshold);
+	}
 
-
-	/* add label and checkbox for exact match vs regex */
-        widget = gtk_label_new("Exact Match (not regex)");
+	/* set the fourth row label and file chooser button for the source directory */
+        widget = gtk_label_new("Source folder");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 3, 4);
-        exact_cb = gtk_check_button_new();
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(exact_cb), exact_match);
-	gtk_table_attach_defaults(GTK_TABLE(table), exact_cb, 1, 2, 3, 4);
+	source_folder_button = gtk_file_chooser_button_new("Select a Folder",
+							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
+	if (source_folder != NULL) {
+		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
+	}
 
 	/* make everything visible */
 	gtk_widget_show_all(edit_window);
@@ -228,32 +243,43 @@ text_attr_search::edit_search()
  */
 
 void
-text_attr_search::save_edits()
+matlab_search::save_edits()
 {
 	if (edit_window == NULL) {
 		return;
 	}
 
-	if (search_string != NULL) {
-		free(search_string);
+	if (eval_function != NULL) {
+		free(eval_function);
 	}
-	if (attr_name != NULL) {
-		free(attr_name);
+	if (init_function != NULL) {
+		free(init_function);
+	}
+	if (threshold != NULL) {
+		free(threshold);
+	}
+	if (source_folder != NULL) {
+		free(source_folder);
 	}
 
-	search_string = strdup(gtk_entry_get_text(GTK_ENTRY(string_entry)));
-	assert(search_string != NULL);
-	attr_name = strdup(gtk_entry_get_text(GTK_ENTRY(attr_entry)));
-	assert(attr_name != NULL);
-	
-	drop_missing = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(drop_cb));
-	exact_match = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(exact_cb));
+	eval_function = strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
+	assert(eval_function != NULL);
+	init_function = strdup(gtk_entry_get_text(GTK_ENTRY(init_function_entry)));
+	assert(init_function != NULL);
+	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
+	assert(threshold != NULL);
+	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
+	assert(source_folder != NULL);
+
+	free(get_auxiliary_data());
+	// TODO: set_auxiliary_data from minitar
+
 	return;
 }
 
 
 void
-text_attr_search::close_edit_win()
+matlab_search::close_edit_win()
 {
 	save_edits();
 
@@ -269,37 +295,36 @@ text_attr_search::close_edit_win()
  */
 
 void
-text_attr_search::write_fspec(FILE *ostream)
+matlab_search::write_fspec(FILE *ostream)
 {
 
 	fprintf(ostream, "\n");
-	fprintf(ostream, "FILTER  %s  # dependancies \n", get_name());
-	fprintf(ostream, "THRESHOLD  1  # number of hits ?? \n");
-	fprintf(ostream, "MERIT  10000  	# guess at cost \n");
-	fprintf(ostream, "EVAL_FUNCTION  f_eval_text_attr  # eval function \n");
-	fprintf(ostream, "INIT_FUNCTION  f_init_text_attr  # init function \n");
-	fprintf(ostream, "FINI_FUNCTION  f_fini_text_attr  # fini function \n");
-	fprintf(ostream, "ARG  %s  # attributes to search \n",attr_name );
-	fprintf(ostream, "ARG  %s  # string to match \n", search_string );
-	fprintf(ostream, "ARG  %d  # exact match  \n", exact_match );
-	fprintf(ostream, "ARG  %d  # drop_missing  \n", drop_missing );
+	fprintf(ostream, "FILTER  %s  # dependencies \n", get_name());
+	fprintf(ostream, "THRESHOLD  %s\n", threshold);
+	fprintf(ostream, "REQUIRES RGB\n");
+	fprintf(ostream, "MERIT  10000\n");
+	fprintf(ostream, "EVAL_FUNCTION  f_eval_matlab_exec  # eval function \n");
+	fprintf(ostream, "INIT_FUNCTION  f_init_matlab_exec  # init function \n");
+	fprintf(ostream, "FINI_FUNCTION  f_fini_matlab_exec  # fini function \n");
+	fprintf(ostream, "ARG  %d\n", init_function );
+	fprintf(ostream, "ARG  %d\n", eval_function );
 	fprintf(ostream, "\n");
 	fprintf(ostream, "\n");
 }
 
 void
-text_attr_search::write_config(FILE *ostream, const char *dirname)
+matlab_search::write_config(FILE *ostream, const char *dirname)
 {
  	fprintf(ostream, "SEARCH %s %s\n", SEARCH_NAME, get_name());
- 	fprintf(ostream, "%s %s\n", ATTR_NAME_ID, attr_name);
- 	fprintf(ostream, "%s %s \n", STRING_ID, search_string);
- 	fprintf(ostream, "%s %d \n", DROP_MISSING_ID, drop_missing);
- 	fprintf(ostream, "%s %d \n", EXACT_MATCH_ID, exact_match);
+ 	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, eval_function);
+ 	fprintf(ostream, "%s %s \n", INIT_FUNCTION_ID, init_function);
+ 	fprintf(ostream, "%s %d \n", THRESHOLD_ID, threshold);
+ 	fprintf(ostream, "%s %d \n", SOURCE_FOLDER_ID, source_folder);
 }
 
-/* Region match isn't meaninful for this search */
+/* Region match isn't meaningful for this search */
 void
-text_attr_search::region_match(RGBImage *img, bbox_list_t *blist)
+matlab_search::region_match(RGBImage *img, bbox_list_t *blist)
 {
 	return;
 }

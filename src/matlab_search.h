@@ -12,16 +12,16 @@
  *  RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
  */
 
-#ifndef	_TEXT_ATTR_SEARCH_H_
-#define	_TEXT_ATTR_SEARCH_H_	1
+#ifndef	_MATLAB_SEARCH_H_
+#define	_MATLAB_SEARCH_H_	1
 
 #include <gtk/gtk.h>
 #include "img_search.h"
 
-class text_attr_search: public img_search {
+class matlab_search: public img_search {
 public:
-	text_attr_search(const char *name, char *descr);
-	~text_attr_search(void);
+	matlab_search(const char *name, char *descr);
+	~matlab_search(void);
 
 	void	save_edits();
 	void	edit_search();
@@ -32,26 +32,27 @@ public:
 	virtual void 	region_match(RGBImage *img, bbox_list_t *blist);
 
 private:
-	char *		attr_name;
-	char *		search_string;
-	int		drop_missing;	
-	int		exact_match;	
-	GtkWidget	*edit_window;
-	GtkWidget	*string_entry;
-	GtkWidget	*attr_entry;
-	GtkWidget	*exact_cb;
-	GtkWidget	*drop_cb;
+	char *		eval_function;
+	char *		init_function;
+	char *          threshold;
+	char *          source_folder;
+	GtkWidget       *eval_function_entry;
+	GtkWidget       *init_function_entry;
+	GtkWidget       *threshold_entry;
+	GtkWidget	*source_folder_button;
+
+	GtkWidget       *edit_window;
 };
 
 
-class text_attr_factory: public img_factory {
+class matlab_factory: public img_factory {
 public:
-	text_attr_factory() {
-		set_name("Text Attributes");
-		set_description("text_attr");
+	matlab_factory() {
+		set_name("MATLAB");
+		set_description("matlab_search");
 	}
 	img_search *create(const char *name) {
-		return new text_attr_search(name, "Text Attributes");
+		return new matlab_search(name, "MATLAB");
 	}
 	int is_example() {
 		return(0);
@@ -69,4 +70,4 @@ extern "C"
 }
 #endif
 
-#endif	/* !_TEXT_ATTR_SEARCH_H_ */
+#endif	/* !_MATLAB_SEARCH_H_ */
