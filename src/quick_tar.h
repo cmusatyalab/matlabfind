@@ -26,7 +26,17 @@ static inline char *safe_strncpy(char *dest, const char *src, size_t n)
    return ret;
 }
 
+
+#ifdef __cplusplus 
+extern "C" {
+#endif
+
 int untar_blob(const char *src_dir_name, unsigned int bloblen, char *blob_data);
 int tar_blob(const char *src_dir_name, int fd);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

@@ -16,6 +16,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <glib.h>
 #include <gtk/gtk.h>
 #include <assert.h>
 #include <string.h>
@@ -25,6 +26,7 @@
 #include "rgb.h"
 #include "matlab_search.h"
 #include "factory.h"
+#include "quick_tar.h"
 
 #define	MAX_DISPLAY_NAME	64
 
@@ -245,6 +247,12 @@ matlab_search::edit_search()
 void
 matlab_search::save_edits()
 {
+	int fd;
+	int blob_len;
+	gchar *name_used;
+	gboolean success;
+	gchar *blob_data;
+
 	if (edit_window == NULL) {
 		return;
 	}
@@ -271,8 +279,20 @@ matlab_search::save_edits()
 	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
 	assert(source_folder != NULL);
 
+	/* blob */
 	free(get_auxiliary_data());
-	// TODO: set_auxiliary_data from minitar
+
+	fd = g_file_open_tmp(NULL, &name_used, NULL);
+	g_assert(fd >= 0);
+
+	blob_len = tar_blob(source_folder + 7, fd);  // +7 because of "file://"
+	g_assert(blob_len >= 0);
+
+	success = g_file_get_contents(name_used, &blob_data, NULL, NULL);
+	g_assert(success);
+
+	set_auxiliary_data(blob_data);
+	set_auxiliary_data_length(blob_len);
 
 	return;
 }

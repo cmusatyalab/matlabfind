@@ -27,7 +27,7 @@ matlabfind_LDFLAGS = -export-dynamic
 pkglib_LTLIBRARIES = libmatlab_search.la
 pkglib_DATA = matlab.sf_conf
 
-libmatlab_search_la_SOURCES = matlab_search.cc
+libmatlab_search_la_SOURCES = matlab_search.cc quick_tar.c
 
 libmatlab_search_la_CPPFLAGS = -I/opt/snapfind/include
 
