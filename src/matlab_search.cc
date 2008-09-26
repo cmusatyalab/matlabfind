@@ -52,7 +52,10 @@ search_init()
 {
 	matlab_factory *fac;
 	fac = new matlab_factory;
+	matlab_codec_factory *fac2;
+	fac2 = new matlab_codec_factory;
 	factory_register(fac);
+	factory_register_codec(fac2);  // also does codec
 }
 
 
@@ -318,11 +321,15 @@ matlab_search::close_edit_win()
 void
 matlab_search::write_fspec(FILE *ostream)
 {
+	if (strcmp("RGB", get_name()) == 0) {
+		fprintf(ostream, "FILTER  RGB\n");
+	} else {
+		fprintf(ostream, "FILTER  %s  # dependencies \n", get_name());
+		fprintf(ostream, "REQUIRES RGB\n");
+	}
 
 	fprintf(ostream, "\n");
-	fprintf(ostream, "FILTER  %s  # dependencies \n", get_name());
 	fprintf(ostream, "THRESHOLD  %s\n", threshold);
-	fprintf(ostream, "REQUIRES RGB\n");
 	fprintf(ostream, "MERIT  10000\n");
 	fprintf(ostream, "EVAL_FUNCTION  f_eval_matlab_exec  # eval function \n");
 	fprintf(ostream, "INIT_FUNCTION  f_init_matlab_exec  # init function \n");

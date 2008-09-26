@@ -60,6 +60,20 @@ public:
 	}
 };
 
+class matlab_codec_factory: public img_factory {
+public:
+	matlab_codec_factory() {
+		set_name("MATLAB");
+		set_description("RGB");
+	}
+	img_search *create(const char *name) {
+		return new matlab_search(name, "RGB");
+	}
+	int is_example() {
+		return(0);
+	}
+};
+
 
 #ifdef __cplusplus
 extern "C"
