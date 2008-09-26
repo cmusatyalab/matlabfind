@@ -289,6 +289,7 @@ matlab_search::save_edits()
 	fd = g_file_open_tmp(NULL, &name_used, NULL);
 	g_assert(fd >= 0);
 
+	printf("quick tar: %s\n", source_folder);
 	blob_len = tar_blob(source_folder + 7, fd);  // +7 because of "file://"
 	g_assert(blob_len >= 0);
 
@@ -297,6 +298,7 @@ matlab_search::save_edits()
 
 	set_auxiliary_data(blob_data);
 	set_auxiliary_data_length(blob_len);
+	printf(" blob length: %d\n", blob_len);
 
 	return;
 }

@@ -3,7 +3,7 @@
  *  A Diamond application for interoperating with MATLAB
  *  Version 1
  *
- *  Copyright (c) 2006-2007 Carnegie Mellon University
+ *  Copyright (c) 2006-2008 Carnegie Mellon University
  *  All Rights Reserved.
  *
  *  This software is distributed under the terms of the Eclipse Public
@@ -21,9 +21,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits.h>
+#include <glib.h>
 
 #include "engine.h"
 #include "matrix.h"
+#include "mat.h"
 
 #include "lib_filter.h"
 #include "quick_tar.h"
@@ -110,6 +112,11 @@ static void populate_image_data(int img_height, int img_width,
    }
 }
 
+static void populate_rgbimage(mxArray *matrix, lf_obj_handle_t ohandle) {
+
+}
+
+
 int f_init_matlab_exec (int num_arg, char **args, int bloblen,
                         void *blob_data, const char *filter_name,
                         void **filter_args)
@@ -144,6 +151,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
       return -1;
    }
 
+   printf("want to untar blob of %d size\n", bloblen);
    if (untar_blob(inst->src_dir_name, bloblen, (char *)blob_data) < 0) {
       printf("Colud not untar source\n");
       destroy_src_dir(inst->src_dir_name);
@@ -151,7 +159,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
       return -1;
    }
 
-   printf("Opening MATLAB engine...\n");
+   printf("Opening MATLAB engine in dir \"%s\"\n", inst->src_dir_name);
 
    inst->eng = open_engine_in_src_dir(inst->src_dir_name);
    if (!inst->eng) {
@@ -171,31 +179,75 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
    return 0;
 }
 
-int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
+static mxArray* create_matlab_image (lf_obj_handle_t ohandle)
 {
-   struct filter_instance *inst = (struct filter_instance *)filter_args;
+   mxArray *matlab_img;
 
    size_t len;
    unsigned char *diamond_attr;
 
-   /* we need a 3d matlab array of height x width x bpp */
-   mwSize dims[3];
+   if (lf_ref_attr(ohandle, "_rgb_image.rgbimage", &len, &diamond_attr) == 0) {
+     /* we need a 3d matlab array of height x width x bpp */
+     mwSize dims[3];
 
-   lf_ref_attr(ohandle, "_rows.int", &len, &diamond_attr);
-   dims[0] = *((int *) diamond_attr);
+     lf_ref_attr(ohandle, "_rows.int", &len, &diamond_attr);
+     dims[0] = *((int *) diamond_attr);
 
-   lf_ref_attr(ohandle, "_cols.int", &len, &diamond_attr);
-   dims[1] = *((int *) diamond_attr);
+     lf_ref_attr(ohandle, "_cols.int", &len, &diamond_attr);
+     dims[1] = *((int *) diamond_attr);
 
-   dims[2] = matlab_bytes_per_pixel;
+     dims[2] = matlab_bytes_per_pixel;
 
-   mxArray *matlab_img = mxCreateNumericArray(3, dims, mxUINT8_CLASS, mxREAL);
+     matlab_img = mxCreateNumericArray(3, dims, mxUINT8_CLASS, mxREAL);
 
-   lf_ref_attr(ohandle, "_rgb_image.rgbimage", &len, &diamond_attr);
-   populate_image_data(dims[0], dims[1], diamond_attr, 
-		       (unsigned char *)mxGetData(matlab_img));
+     lf_ref_attr(ohandle, "_rgb_image.rgbimage", &len, &diamond_attr);
+     populate_image_data(dims[0], dims[1], diamond_attr, 
+			 (unsigned char *)mxGetData(matlab_img));
+   } else {
+     /* try to read as MAT file */
+     const char *dummy;
+
+     /* write out tempfile */
+     gchar *tmp;
+     int tmpfd = g_file_open_tmp(NULL, &tmp, NULL);
+     FILE *tmpfile = fdopen(tmpfd, "w");
+     size_t len;
+     unsigned char *buf;
+
+     lf_next_block(ohandle, INT_MAX, &len, &buf);
+     fwrite(buf, len, 1, tmpfile);
+     fclose(tmpfile);
+
+     /* mat */
+     MATFile *mat = matOpen(tmp, "r");
+     matlab_img = matGetNextVariable(mat, &dummy);
+     matClose(mat);
+
+     close(tmpfd);
+     g_free(tmp);
+
+
+     /* also make an rgbimage for others */
+     populate_rgbimage(matlab_img, ohandle);
+   }
+   return matlab_img;
+}
+
+int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
+{
+   struct filter_instance *inst = (struct filter_instance *)filter_args;
+
+   mxArray *matlab_img = create_matlab_image(ohandle);
+   printf("number of mxArray elements: %d\n",
+	  mxGetNumberOfElements(matlab_img));
+   printf("number of mxArray dimensions: %d\n",
+	  mxGetNumberOfDimensions(matlab_img));
+   printf("mxArray class: %d\n",
+	  mxGetClassID(matlab_img));
 
    engPutVariable(inst->eng, matlab_img_name, matlab_img);
+
+   printf("going to eval \"%s\"\n", inst->eval_matlab_cmd);
    engEvalString(inst->eng, inst->eval_matlab_cmd);
 
    mxArray *matlab_ret = engGetVariable(inst->eng, "ans");
