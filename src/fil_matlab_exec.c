@@ -36,7 +36,8 @@
 
 static const int diamond_bytes_per_pixel = 4;
 static const int matlab_bytes_per_pixel = 3;
-static const char matlab_img_name[] = "image";
+
+#define matlab_img_name "image"
 
 struct filter_instance {
    char src_dir_name[PATH_MAX];
@@ -112,8 +113,72 @@ static void populate_image_data(int img_height, int img_width,
    }
 }
 
-static void populate_rgbimage(mxArray *matrix, lf_obj_handle_t ohandle) {
+static void populate_rgbimage(Engine *eng,
+			      mxArray *matrix, lf_obj_handle_t ohandle) {
+  // convert the image into a normalized RGB
+  engPutVariable(eng, matlab_img_name, matrix);
+  engEvalString(eng, matlab_img_name " = uint8((imadjust(uint16(" matlab_img_name "))) * (255 / 65535))");
 
+  mxArray *normalized_img = engGetVariable(eng, matlab_img_name);
+  if (mxGetNumberOfDimensions(normalized_img) < 3) {
+    // make into RGB
+    engEvalString(eng, matlab_img_name " = cat(3, " matlab_img_name ", " matlab_img_name ", " matlab_img_name ")");
+    mxDestroyArray(normalized_img);
+    normalized_img = engGetVariable(eng, matlab_img_name);
+  }
+
+  assert(mxGetNumberOfDimensions(normalized_img) == 3);
+  assert(mxGetClassID(normalized_img) == mxUINT8_CLASS);
+  //assert(mxGetNumberOfElements(normalized_img) == (w * h * 3));
+
+  const mwSize *dims;
+  dims = mxGetDimensions(normalized_img);
+  printf("[ %d %d %d ]\n", dims[0], dims[1], dims[2]);
+  assert(dims[2] == matlab_bytes_per_pixel);
+
+  int h = dims[0];
+  int w = dims[1];
+
+  printf("writing rows: %d, cols: %d\n", h, w);
+  lf_write_attr(ohandle, "_rows.int", sizeof(int), (unsigned char *) &h);
+  lf_write_attr(ohandle, "_cols.int", sizeof(int), (unsigned char *) &w);
+
+  size_t len = w * h * 4 + 16;   // 16 == RGBImage header
+  unsigned char *diamond_buf = calloc(1, len);
+  unsigned char *matlab_buf = (unsigned char *) mxGetData(normalized_img);
+
+  // type is 0
+
+  // write nbytes
+  *((int *) (diamond_buf + 4)) = len;
+
+  // write h
+  *((int *) (diamond_buf + 8)) = h;
+
+  // write w
+  *((int *) (diamond_buf + 12)) = w;
+
+  // write data
+  int img_row, img_col, i;
+  for (img_row = 0; img_row < h; img_row++) {
+    for (img_col = 0; img_col < w; img_col++) {
+      // alpha
+      diamond_buf[img_col * diamond_bytes_per_pixel +
+		  img_row * diamond_bytes_per_pixel * w + 3 + 16] = 255;
+      // RGB
+      for (i = 0; i < matlab_bytes_per_pixel; i++) {
+	diamond_buf[img_col * diamond_bytes_per_pixel +
+		    img_row * diamond_bytes_per_pixel * w + i + 16] =
+	  matlab_buf[img_row + img_col * h + h * w * i];
+      }
+    }
+  }
+
+  printf("writing rgbimage of len: %d\n", len);
+  lf_write_attr(ohandle, "_rgb_image.rgbimage", len, diamond_buf);
+
+  free(diamond_buf);
+  mxDestroyArray(normalized_img);
 }
 
 
@@ -179,7 +244,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
    return 0;
 }
 
-static mxArray* create_matlab_image (lf_obj_handle_t ohandle)
+static mxArray* create_matlab_image (Engine *eng, lf_obj_handle_t ohandle)
 {
    mxArray *matlab_img;
 
@@ -228,7 +293,7 @@ static mxArray* create_matlab_image (lf_obj_handle_t ohandle)
 
 
      /* also make an rgbimage for others */
-     populate_rgbimage(matlab_img, ohandle);
+     populate_rgbimage(eng, matlab_img, ohandle);
    }
    return matlab_img;
 }
@@ -237,7 +302,7 @@ int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
-   mxArray *matlab_img = create_matlab_image(ohandle);
+   mxArray *matlab_img = create_matlab_image(inst->eng, ohandle);
    printf("number of mxArray elements: %d\n",
 	  mxGetNumberOfElements(matlab_img));
    printf("number of mxArray dimensions: %d\n",
