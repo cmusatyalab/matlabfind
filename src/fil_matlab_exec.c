@@ -119,22 +119,21 @@ static void populate_rgbimage(Engine *eng,
 			      mxArray *matrix, lf_obj_handle_t ohandle) {
   // convert the image into a normalized RGB
   engPutVariable(eng, matlab_img_name, matrix);
-  engEvalString(eng, matlab_img_name " = uint8((imadjust(uint16(" matlab_img_name "))) * (255 / 65535))");
+  engEvalString(eng, matlab_img_name " = im2uint8(" matlab_img_name ")");
 
-  mxArray *normalized_img = engGetVariable(eng, matlab_img_name);
-  if (mxGetNumberOfDimensions(normalized_img) < 3) {
+  mxArray *uint8_img = engGetVariable(eng, matlab_img_name);
+  if (mxGetNumberOfDimensions(uint8_img) < 3) {
     // make into RGB
     engEvalString(eng, matlab_img_name " = cat(3, " matlab_img_name ", " matlab_img_name ", " matlab_img_name ")");
-    mxDestroyArray(normalized_img);
-    normalized_img = engGetVariable(eng, matlab_img_name);
+    mxDestroyArray(uint8_img);
+    uint8_img = engGetVariable(eng, matlab_img_name);
   }
 
-  assert(mxGetNumberOfDimensions(normalized_img) == 3);
-  assert(mxGetClassID(normalized_img) == mxUINT8_CLASS);
-  //assert(mxGetNumberOfElements(normalized_img) == (w * h * 3));
+  assert(mxGetNumberOfDimensions(uint8_img) == 3);
+  assert(mxGetClassID(uint8_img) == mxUINT8_CLASS);
 
   const mwSize *dims;
-  dims = mxGetDimensions(normalized_img);
+  dims = mxGetDimensions(uint8_img);
   printf("[ %d %d %d ]\n", dims[0], dims[1], dims[2]);
   assert(dims[2] == matlab_bytes_per_pixel);
 
@@ -147,7 +146,7 @@ static void populate_rgbimage(Engine *eng,
 
   size_t len = w * h * 4 + 16;   // 16 == RGBImage header
   unsigned char *diamond_buf = calloc(1, len);
-  unsigned char *matlab_buf = (unsigned char *) mxGetData(normalized_img);
+  unsigned char *matlab_buf = (unsigned char *) mxGetData(uint8_img);
 
   // type is 0
 
@@ -180,7 +179,7 @@ static void populate_rgbimage(Engine *eng,
   lf_write_attr(ohandle, "_rgb_image.rgbimage", len, diamond_buf);
 
   free(diamond_buf);
-  mxDestroyArray(normalized_img);
+  mxDestroyArray(uint8_img);
 }
 
 
