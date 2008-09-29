@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <glib.h>
+#include <stdbool.h>
 
 #include "engine.h"
 #include "matrix.h"
@@ -40,10 +41,11 @@ static const int matlab_bytes_per_pixel = 3;
 #define matlab_img_name "image"
 
 struct filter_instance {
-   char src_dir_name[PATH_MAX];
-   char init_matlab_cmd[512];
-   char eval_matlab_cmd[512];
-   Engine *eng;   
+  char src_dir_name[PATH_MAX];
+  char init_matlab_cmd[512];
+  char eval_matlab_cmd[512];
+  Engine *eng;
+  bool is_codec;
 };
 
 static void destroy_src_dir(const char *src_dir_name)
@@ -204,7 +206,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
    safe_strncpy(inst->init_matlab_cmd, args[0],
 		sizeof(inst->init_matlab_cmd));
 
-   snprintf(inst->eval_matlab_cmd, sizeof(inst->eval_matlab_cmd), "%s(%s)",
+   snprintf(inst->eval_matlab_cmd, sizeof(inst->eval_matlab_cmd), "[ans image] = %s(%s)",
 	    args[1], matlab_img_name);
 
    safe_strncpy(inst->src_dir_name, "/tmp/matlab_src_XXXXXX",
@@ -238,20 +240,23 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
 
    engEvalString(inst->eng, inst->init_matlab_cmd);
 
+   // codec?
+   inst->is_codec = (strcmp("RGB", filter_name) == 0);
+
    (*filter_args) = (void *)inst;
 
    printf("Filter init successful!\n");
    return 0;
 }
 
-static mxArray* create_matlab_image (Engine *eng, lf_obj_handle_t ohandle)
+static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
 {
    mxArray *matlab_img;
 
    size_t len;
    unsigned char *diamond_attr;
 
-   if (lf_ref_attr(ohandle, "_rgb_image.rgbimage", &len, &diamond_attr) == 0) {
+   if (!is_codec) {
      /* we need a 3d matlab array of height x width x bpp */
      mwSize dims[3];
 
@@ -292,8 +297,6 @@ static mxArray* create_matlab_image (Engine *eng, lf_obj_handle_t ohandle)
      g_free(tmp);
 
 
-     /* also make an rgbimage for others */
-     populate_rgbimage(eng, matlab_img, ohandle);
    }
    return matlab_img;
 }
@@ -302,7 +305,7 @@ int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
-   mxArray *matlab_img = create_matlab_image(inst->eng, ohandle);
+   mxArray *matlab_img = create_matlab_image(ohandle, inst->is_codec);
    printf("number of mxArray elements: %d\n",
 	  mxGetNumberOfElements(matlab_img));
    printf("number of mxArray dimensions: %d\n",
@@ -314,6 +317,13 @@ int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 
    printf("going to eval \"%s\"\n", inst->eval_matlab_cmd);
    engEvalString(inst->eng, inst->eval_matlab_cmd);
+
+   if (inst->is_codec) {
+     /* also make an rgbimage for others */
+     mxDestroyArray(matlab_img);
+     matlab_img = engGetVariable(inst->eng, matlab_img_name);
+     populate_rgbimage(inst->eng, matlab_img, ohandle);
+   }
 
    mxArray *matlab_ret = engGetVariable(inst->eng, "ans");
    double matlab_ret_d = *(mxGetPr(matlab_ret));
