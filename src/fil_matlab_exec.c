@@ -82,6 +82,10 @@ static Engine *open_engine_in_src_dir(const char *src_dir_name)
    // try to not have MATLAB screw up with LS_COLORS or other things
    clearenv();
 
+   // set PATH so Intel's Math Kernel Library used by MATLAB doesn't crash
+   // when loading mkl.cfg (used by POLYFIT and others)
+   setenv("PATH", "/bin:/usr/bin", 0);
+
    printf("Trying to do an engOpen\n");
    ret = engOpen("i386 " MATLAB_EXE_PATH);
    printf("engOpen done\n");
