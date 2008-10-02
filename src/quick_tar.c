@@ -82,9 +82,10 @@ int tar_blob(const char *src_dir_name, int out_fd)
 
   struct dirent *src_dir_ent;
   while ( (src_dir_ent = readdir(src_dir)) ) {
-    if (src_dir_ent->d_type == DT_REG) {
+    if (src_dir_ent->d_type == DT_REG || src_dir_ent->d_type == DT_UNKNOWN) {
       char file_path[PATH_MAX];
-      snprintf(file_path, sizeof(file_path), "%s/%s", src_dir_name, src_dir_ent->d_name);
+      snprintf(file_path, sizeof(file_path), "%s/%s",
+	       src_dir_name, src_dir_ent->d_name);
 
       int in_fd = open(file_path, O_RDONLY);
       if (in_fd < 0) {
@@ -97,6 +98,13 @@ int tar_blob(const char *src_dir_name, int out_fd)
 
       struct stat stat_buf;
       if (fstat(in_fd, &stat_buf) < 0) {
+	close(in_fd);
+	return -1;
+      }
+
+      // if DT_UNKNOWN above, check here
+      if (!S_ISREG(stat_buf.st_mode)) {
+	close(in_fd);
 	return -1;
       }
 
@@ -107,14 +115,17 @@ int tar_blob(const char *src_dir_name, int out_fd)
       name_size_buf = htonl(name_size);
 
       if (write(out_fd, &name_size_buf, sizeof(name_size_buf)) != sizeof(name_size_buf)) {
+	close(in_fd);
 	return -1;
       }
 
       if (write(out_fd, &file_size_buf, sizeof(file_size_buf)) != sizeof(file_size_buf)) {
+	close(in_fd);
 	return -1;
       }
 
       if (write(out_fd, src_dir_ent->d_name, name_size) != name_size) {
+	close(in_fd);
 	return -1;
       }
 
@@ -124,10 +135,12 @@ int tar_blob(const char *src_dir_name, int out_fd)
 	int amt = min(bytes_remaining, sizeof(file_buf));
 
 	if (read(in_fd, file_buf, amt) != amt) {
+	  close(in_fd);
 	  return -1;
 	}
 
 	if (write(out_fd, file_buf, amt) != amt) {
+	  close(in_fd);
 	  return -1;
 	}
 
@@ -135,6 +148,7 @@ int tar_blob(const char *src_dir_name, int out_fd)
       }
 
       bytes_written += sizeof(name_size) + sizeof(file_size) + name_size + file_size;
+      close(in_fd);
     }
   }
 
