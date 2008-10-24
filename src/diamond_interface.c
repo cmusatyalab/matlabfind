@@ -335,7 +335,7 @@ ls_search_handle_t diamond_matlab_search(const gchar *eval_fn, const gchar *init
   blob_fd = g_file_open_tmp(NULL, &blob_name_used, NULL);
   g_assert(fd >= 0);
 
-  blob_len = tar_blob(src_folder + 7, blob_fd);
+  blob_len = tar_blob(src_folder, blob_fd);
   g_assert(blob_len >= 0);
 
   blob_data = mmap(NULL, blob_len, PROT_READ, MAP_PRIVATE, blob_fd, 0);

@@ -103,7 +103,7 @@ void on_saveSearchButton_clicked (GtkButton *button,
     gtk_entry_get_text(GTK_ENTRY(glade_xml_get_widget(g_xml, "initFunction")));
 
   const gchar *src_folder =
-    gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(glade_xml_get_widget(g_xml, "srcFolder")));
+    gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(glade_xml_get_widget(g_xml, "srcFolder")));
 
   const gchar *threshold_str =
     gtk_entry_get_text(GTK_ENTRY(glade_xml_get_widget(g_xml, "threshold")));

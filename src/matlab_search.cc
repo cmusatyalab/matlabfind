@@ -280,7 +280,7 @@ matlab_search::save_edits()
 	assert(init_function != NULL);
 	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
-	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
+	source_folder = strdup(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(source_folder_button)));
 	assert(source_folder != NULL);
 
 	/* blob */
@@ -290,7 +290,7 @@ matlab_search::save_edits()
 	g_assert(fd >= 0);
 
 	printf("quick tar: %s\n", source_folder);
-	blob_len = tar_blob(source_folder + 7, fd);  // +7 because of "file://"
+	blob_len = tar_blob(source_folder, fd);
 	g_assert(blob_len >= 0);
 
 	success = g_file_get_contents(name_used, &blob_data, NULL, NULL);
