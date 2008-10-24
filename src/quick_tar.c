@@ -105,7 +105,7 @@ int tar_blob(const char *src_dir_name, int out_fd)
       // if DT_UNKNOWN above, check here
       if (!S_ISREG(stat_buf.st_mode)) {
 	close(in_fd);
-	return -1;
+	continue;
       }
 
       file_size = stat_buf.st_size;
