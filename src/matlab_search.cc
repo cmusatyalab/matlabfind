@@ -232,7 +232,7 @@ matlab_search::edit_search()
 							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
 	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
 	if (source_folder != NULL) {
-		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
+		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
 	/* make everything visible */
