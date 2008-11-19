@@ -1,8 +1,0 @@
-FILTER  RGB  # convert file to rgb
-THRESHOLD  1  # this will always pass
-MERIT  500  # run this early hint
-EVAL_FUNCTION  f_eval_img2rgb  # eval function
-INIT_FUNCTION  f_init_img2rgb  # init function
-FINI_FUNCTION  f_fini_img2rgb  # fini function
-FILTER  APPLICATION  # dependancies
-REQUIRES  RGB  # dependancies
