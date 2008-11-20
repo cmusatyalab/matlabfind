@@ -1,4 +1,6 @@
+INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra -Iquick-tar
+SNAPFIND_LIBDIR=/opt/snapfind/lib
 
 MATLAB_ROOT_DIR=/afs/cs.cmu.edu/local/matlab/i386_fc5/7.6/lib/matlab7
 MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
@@ -24,3 +26,10 @@ snapfind-plugin/matlab_search.so: snapfind-plugin/matlab_search.h snapfind-plugi
 # clean
 clean:
 	$(RM) -r filter-code/fil_matlab_exec.so quick-tar/*.o snapfind-plugin/*.so
+
+install: all snapfind-plugin/matlab.sf_conf
+	$(INSTALL) filter-code/*.so snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
+	$(INSTALL) -m 644 snapfind-plugin/*.sf_conf $(SNAPFIND_LIBDIR)
+
+
+.DUMMY: all clean install
