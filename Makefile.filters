@@ -1,7 +1,0 @@
-MATLAB_ROOT_DIR=/afs/cs.cmu.edu/local/matlab/i386_fc5/7.6/lib/matlab7
-MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
-MATLAB_INCLUDEDIR=${MATLAB_ROOT_DIR}/extern/include
-MATLAB_EXE_PATH=${MATLAB_ROOT_DIR}/bin/matlab
-
-data/filter/fil_matlab_exec.so: src/fil_matlab_exec.c src/quick_tar.h src/quick_tar.c
-	gcc -fPIC -Werror-implicit-function-declaration `pkg-config opendiamond glib-2.0 --cflags` -I${MATLAB_INCLUDEDIR} -L${MATLAB_LIBDIR} -O2 -g -m32 -Wall -shared  -o $@ src/fil_matlab_exec.c src/quick_tar.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -leng -lmx -lut -Xlinker -rpath -Xlinker ${MATLAB_LIBDIR}
