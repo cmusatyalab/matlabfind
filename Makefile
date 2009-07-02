@@ -20,7 +20,7 @@ filter-code/fil_matlab_exec.so: filter-code/fil_matlab_exec.c quick-tar/quick_ta
 
 # snapfind plugin
 snapfind-plugin/matlab_search.so: snapfind-plugin/matlab_search.h snapfind-plugin/matlab_search.cc quick-tar/quick_tar.o
-	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/matlab_search.cc $$(pkg-config --cflags --libs gtk+-2.0 opendiamond) quick-tar/quick_tar.o
+	g++ $(CFLAGS) -I/opt/snapfind/include -shared -o $@ snapfind-plugin/matlab_search.cc $$(pkg-config --cflags gtk+-2.0 opendiamond) quick-tar/quick_tar.o
 
 
 # clean
