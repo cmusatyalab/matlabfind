@@ -64,7 +64,7 @@ class matlab_codec_factory: public img_factory {
 public:
 	matlab_codec_factory() {
 		set_name("MATLAB");
-		set_description("RGB");
+		set_description("matlab_codec");
 	}
 	img_search *create(const char *name) {
 		return new matlab_search(name, "RGB");

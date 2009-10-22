@@ -63,10 +63,10 @@ search_init()
 matlab_search::matlab_search(const char *name, char *descr)
 		: img_search(name, descr)
 {
-	eval_function = NULL;
-	init_function = NULL;
-	threshold = NULL;
-	source_folder = NULL;
+	eval_function = strdup("eval");
+	init_function = strdup("init");
+	threshold = strdup("0");
+	source_folder = strdup(".");
 
 	edit_window = NULL;
 
@@ -289,7 +289,6 @@ matlab_search::save_edits()
 	fd = g_file_open_tmp(NULL, &name_used, NULL);
 	g_assert(fd >= 0);
 
-	printf("quick tar: %s\n", source_folder);
 	blob_len = tar_blob(source_folder, fd);
 	g_assert(blob_len >= 0);
 
@@ -298,7 +297,6 @@ matlab_search::save_edits()
 
 	set_auxiliary_data(blob_data);
 	set_auxiliary_data_length(blob_len);
-	printf(" blob length: %d\n", blob_len);
 
 	return;
 }
@@ -348,8 +346,8 @@ matlab_search::write_config(FILE *ostream, const char *dirname)
  	fprintf(ostream, "SEARCH %s %s\n", SEARCH_NAME, get_name());
  	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, eval_function);
  	fprintf(ostream, "%s %s \n", INIT_FUNCTION_ID, init_function);
- 	fprintf(ostream, "%s %d \n", THRESHOLD_ID, threshold);
- 	fprintf(ostream, "%s %d \n", SOURCE_FOLDER_ID, source_folder);
+ 	fprintf(ostream, "%s %s \n", THRESHOLD_ID, threshold);
+ 	fprintf(ostream, "%s %s \n", SOURCE_FOLDER_ID, source_folder);
 }
 
 /* Region match isn't meaningful for this search */
