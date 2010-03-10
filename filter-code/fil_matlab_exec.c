@@ -287,7 +287,7 @@ static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
      size_t len;
      unsigned char *buf;
 
-     lf_next_block(ohandle, INT_MAX, &len, &buf);
+     lf_ref_attr(ohandle, "", &len, &buf);
      fwrite(buf, len, 1, tmpfile);
      fclose(tmpfile);
 
