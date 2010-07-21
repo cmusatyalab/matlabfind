@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <glib.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "lib_filter.h"
 #include "quick_tar.h"
