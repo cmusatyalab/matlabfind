@@ -24,16 +24,14 @@
 #include <glib.h>
 #include <stdbool.h>
 
-#include "engine.h"
-#include "matrix.h"
-#include "mat.h"
-
 #include "lib_filter.h"
 #include "quick_tar.h"
+#include "matlab-compat.h"
 
 #ifndef MATLAB_EXE_PATH
 #error Must specify MATLAB_EXE_PATH as compilation flag
 #endif
+
 
 static const int diamond_bytes_per_pixel = 4;
 static const int matlab_bytes_per_pixel = 3;
@@ -136,7 +134,7 @@ static void populate_rgbimage(Engine *eng,
   assert(mxGetNumberOfDimensions(uint8_img) == 3);
   assert(mxGetClassID(uint8_img) == mxUINT8_CLASS);
 
-  const mwSize *dims;
+  const size_t *dims;
   dims = mxGetDimensions(uint8_img);
   printf("[ %d %d %d ]\n", dims[0], dims[1], dims[2]);
   assert(dims[2] == matlab_bytes_per_pixel);
@@ -261,7 +259,7 @@ static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
 
    if (!is_codec) {
      /* we need a 3d matlab array of height x width x bpp */
-     mwSize dims[3];
+     size_t dims[3];
 
      lf_ref_attr(ohandle, "_rows.int", &len, &diamond_attr);
      dims[0] = *((int *) diamond_attr);

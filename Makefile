@@ -4,7 +4,6 @@ SNAPFIND_LIBDIR=/opt/snapfind/lib
 
 MATLAB_ROOT_DIR=/afs/cs.cmu.edu/local/matlab/i386_fc5/7.6/lib/matlab7
 MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
-MATLAB_INCLUDEDIR=${MATLAB_ROOT_DIR}/extern/include
 MATLAB_EXE_PATH=${MATLAB_ROOT_DIR}/bin/matlab
 
 all: filter-code/fil_matlab_exec.so snapfind-plugin/matlab_search.so
@@ -14,8 +13,8 @@ quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
 	gcc $(CFLAGS) -o $@ -c quick-tar/quick_tar.c
 
 # filter code
-filter-code/fil_matlab_exec.so: filter-code/fil_matlab_exec.c quick-tar/quick_tar.o
-	gcc $(CFLAGS) $$(pkg-config opendiamond glib-2.0 --cflags) -I${MATLAB_INCLUDEDIR} -L${MATLAB_LIBDIR} -shared  -o $@ filter-code/fil_matlab_exec.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -leng -lmx -lut -Xlinker -rpath -Xlinker ${MATLAB_LIBDIR} quick-tar/quick_tar.o
+filter-code/fil_matlab_exec.so: filter-code/fil_matlab_exec.c quick-tar/quick_tar.o filter-code/matlab-compat.h
+	gcc $(CFLAGS) $$(pkg-config opendiamond glib-2.0 --cflags) -L${MATLAB_LIBDIR} -shared  -o $@ filter-code/fil_matlab_exec.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -leng -lmx quick-tar/quick_tar.o
 
 
 # snapfind plugin
