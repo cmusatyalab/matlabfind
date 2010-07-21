@@ -14,7 +14,7 @@ quick-tar/quick_tar.o: quick-tar/quick_tar.c quick-tar/quick_tar.h
 
 # filter code
 filter-code/fil_matlab_exec.so: filter-code/fil_matlab_exec.c quick-tar/quick_tar.o filter-code/matlab-compat.h
-	gcc $(CFLAGS) $$(pkg-config opendiamond glib-2.0 --cflags) -L${MATLAB_LIBDIR} -shared  -o $@ filter-code/fil_matlab_exec.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -leng -lmx quick-tar/quick_tar.o
+	gcc $(CFLAGS) $$(pkg-config opendiamond glib-2.0 --cflags) -shared -o $@ filter-code/fil_matlab_exec.c -DMATLAB_EXE_PATH=\"${MATLAB_EXE_PATH}\" -Wl,-rpath=${MATLAB_LIBDIR} quick-tar/quick_tar.o
 
 
 # snapfind plugin

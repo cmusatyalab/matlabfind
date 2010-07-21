@@ -24,6 +24,7 @@
 #include <glib.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <dlfcn.h>
 
 #include "lib_filter.h"
 #include "quick_tar.h"
@@ -45,6 +46,12 @@ struct filter_instance {
   char eval_matlab_cmd[512];
   Engine *eng;
   bool is_codec;
+
+  // dlopen stuff
+  void *dl_eng;
+  void *dl_mx;
+  void *dl_mat;
+  struct mm mm;
 };
 
 static void destroy_src_dir(const char *src_dir_name)
@@ -65,7 +72,7 @@ static void destroy_src_dir(const char *src_dir_name)
 
 }
 
-static Engine *open_engine_in_src_dir(const char *src_dir_name)
+static Engine *open_engine_in_src_dir(struct mm *mm, const char *src_dir_name)
 {
    Engine *ret;
    char current_path[PATH_MAX];
@@ -86,12 +93,12 @@ static Engine *open_engine_in_src_dir(const char *src_dir_name)
    setenv("PATH", "/bin:/usr/bin", 0);
 
    printf("Trying to do an engOpen\n");
-   ret = engOpen("i386 " MATLAB_EXE_PATH);
+   ret = mm->engOpen("i386 " MATLAB_EXE_PATH);
    printf("engOpen done\n");
 
    if (chdir(current_path) < 0) {
       if (ret) {
-	 engClose(ret);
+	 mm->engClose(ret);
       }
 
       return NULL;
@@ -118,25 +125,25 @@ static void populate_image_data(int img_height, int img_width,
    }
 }
 
-static void populate_rgbimage(Engine *eng,
+static void populate_rgbimage(struct mm *mm, Engine *eng,
 			      mxArray *matrix, lf_obj_handle_t ohandle) {
   // convert the image into a normalized RGB
-  engPutVariable(eng, matlab_img_name, matrix);
-  engEvalString(eng, matlab_img_name " = im2uint8(" matlab_img_name ")");
+  mm->engPutVariable(eng, matlab_img_name, matrix);
+  mm->engEvalString(eng, matlab_img_name " = im2uint8(" matlab_img_name ")");
 
-  mxArray *uint8_img = engGetVariable(eng, matlab_img_name);
-  if (mxGetNumberOfDimensions(uint8_img) < 3) {
+  mxArray *uint8_img = mm->engGetVariable(eng, matlab_img_name);
+  if (mm->mxGetNumberOfDimensions(uint8_img) < 3) {
     // make into RGB
-    engEvalString(eng, matlab_img_name " = cat(3, " matlab_img_name ", " matlab_img_name ", " matlab_img_name ")");
-    mxDestroyArray(uint8_img);
-    uint8_img = engGetVariable(eng, matlab_img_name);
+    mm->engEvalString(eng, matlab_img_name " = cat(3, " matlab_img_name ", " matlab_img_name ", " matlab_img_name ")");
+    mm->mxDestroyArray(uint8_img);
+    uint8_img = mm->engGetVariable(eng, matlab_img_name);
   }
 
-  assert(mxGetNumberOfDimensions(uint8_img) == 3);
-  assert(mxGetClassID(uint8_img) == mxUINT8_CLASS);
+  assert(mm->mxGetNumberOfDimensions(uint8_img) == 3);
+  assert(mm->mxGetClassID(uint8_img) == mxUINT8_CLASS);
 
   const size_t *dims;
-  dims = mxGetDimensions(uint8_img);
+  dims = mm->mxGetDimensions(uint8_img);
   printf("[ %d %d %d ]\n", dims[0], dims[1], dims[2]);
   assert(dims[2] == matlab_bytes_per_pixel);
 
@@ -149,7 +156,7 @@ static void populate_rgbimage(Engine *eng,
 
   size_t len = w * h * 4 + 16;   // 16 == RGBImage header
   unsigned char *diamond_buf = calloc(1, len);
-  unsigned char *matlab_buf = (unsigned char *) mxGetData(uint8_img);
+  unsigned char *matlab_buf = (unsigned char *) mm->mxGetData(uint8_img);
 
   // type is 0
 
@@ -182,7 +189,32 @@ static void populate_rgbimage(Engine *eng,
   lf_write_attr(ohandle, "_rgb_image.rgbimage", len, diamond_buf);
 
   free(diamond_buf);
-  mxDestroyArray(uint8_img);
+  mm->mxDestroyArray(uint8_img);
+}
+
+static void *dlsym_or_die(void *handle, const char *sym_name) {
+  char *error;
+
+  dlerror();  // clear
+  void *sym = dlsym(handle, sym_name);
+  if ((error = dlerror()) != NULL) {
+    fprintf(stderr, "%s\n", error);
+    abort();
+  }
+
+  return sym;
+}
+
+static void dlclose_matlab(struct filter_instance *inst) {
+  if (inst->dl_eng) {
+    dlclose(inst->dl_eng);
+  }
+  if (inst->dl_mx) {
+    dlclose(inst->dl_mx);
+  }
+  if (inst->dl_mat) {
+    dlclose(inst->dl_mat);
+  }
 }
 
 
@@ -194,6 +226,8 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
 
    struct filter_instance *inst = 
       (struct filter_instance *)malloc(sizeof(struct filter_instance));
+
+   struct mm *mm = &inst->mm;
 
    if (!inst) {
       return -1;
@@ -228,9 +262,43 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
       return -1;
    }
 
+   // dlopen matlab, because we don't have access to it from Fedora mock
+   inst->dl_eng = dlopen("libeng.so", RTLD_LAZY | RTLD_LOCAL);
+   inst->dl_mx = dlopen("libmx.so", RTLD_LAZY | RTLD_LOCAL);
+   inst->dl_mat = dlopen("libmat.so", RTLD_LAZY | RTLD_LOCAL);
+
+   // check for failure
+   if ((inst->dl_eng == NULL) || (inst->dl_mx == NULL) || (inst->dl_mat == NULL)) {
+     dlclose_matlab(inst);
+
+     free(inst);
+     return -1;
+   }
+
+   // dlsym everything
+   mm->engOpen = dlsym_or_die(inst->dl_eng, "engOpen");
+   mm->engClose = dlsym_or_die(inst->dl_eng, "engClose");
+   mm->engPutVariable = dlsym_or_die(inst->dl_eng, "engPutVariable");
+   mm->engEvalString = dlsym_or_die(inst->dl_eng, "engEvalString");
+   mm->engGetVariable = dlsym_or_die(inst->dl_eng, "engGetVariable");
+
+   mm->mxGetNumberOfDimensions = dlsym_or_die(inst->dl_eng, "mxGetNumberOfDimensions");
+   mm->mxDestroyArray = dlsym_or_die(inst->dl_eng, "mxDestroyArray");
+   mm->mxGetClassID = dlsym_or_die(inst->dl_eng, "mxGetClassID");
+   mm->mxGetDimensions = dlsym_or_die(inst->dl_eng, "mxGetDimensions");
+   mm->mxGetData = dlsym_or_die(inst->dl_eng, "mxGetData");
+   mm->mxCreateNumericArray = dlsym_or_die(inst->dl_eng, "mxCreateNumericArray");
+   mm->mxGetNumberOfElements = dlsym_or_die(inst->dl_eng, "mxGetNumberOfElements");
+   mm->mxGetPr = dlsym_or_die(inst->dl_eng, "mxGetPr");
+
+   mm->matOpen = dlsym_or_die(inst->dl_eng, "matOpen");
+   mm->matGetNextVariable = dlsym_or_die(inst->dl_eng, "matGetNextVariable");
+   mm->matClose = dlsym_or_die(inst->dl_eng, "matClose");
+
+
    printf("Opening MATLAB engine in dir \"%s\"\n", inst->src_dir_name);
 
-   inst->eng = open_engine_in_src_dir(inst->src_dir_name);
+   inst->eng = open_engine_in_src_dir(mm, inst->src_dir_name);
    if (!inst->eng) {
       printf("Could not open engine\n");
       destroy_src_dir(inst->src_dir_name);
@@ -240,7 +308,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
 
    printf("Running init function in MATLAB\n");
 
-   engEvalString(inst->eng, inst->init_matlab_cmd);
+   mm->engEvalString(inst->eng, inst->init_matlab_cmd);
 
    // codec?
    inst->is_codec = (strcmp("RGB", filter_name) == 0);
@@ -251,7 +319,7 @@ int f_init_matlab_exec (int num_arg, char **args, int bloblen,
    return 0;
 }
 
-static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
+static mxArray* create_matlab_image (struct mm *mm, lf_obj_handle_t ohandle, bool is_codec)
 {
    mxArray *matlab_img;
 
@@ -270,11 +338,11 @@ static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
 
      dims[2] = matlab_bytes_per_pixel;
 
-     matlab_img = mxCreateNumericArray(3, dims, mxUINT8_CLASS, mxREAL);
+     matlab_img = mm->mxCreateNumericArray(3, dims, mxUINT8_CLASS, mxREAL);
 
      lf_ref_attr(ohandle, "_rgb_image.rgbimage", &len, &diamond_attr);
      populate_image_data(dims[0], dims[1], diamond_attr, 
-			 (unsigned char *)mxGetData(matlab_img));
+			 (unsigned char *)mm->mxGetData(matlab_img));
    } else {
      /* try to read as MAT file */
      const char *dummy;
@@ -291,9 +359,9 @@ static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
      fclose(tmpfile);
 
      /* mat */
-     MATFile *mat = matOpen(tmp, "r");
-     matlab_img = matGetNextVariable(mat, &dummy);
-     matClose(mat);
+     MATFile *mat = mm->matOpen(tmp, "r");
+     matlab_img = mm->matGetNextVariable(mat, &dummy);
+     mm->matClose(mat);
 
      close(tmpfd);
      g_free(tmp);
@@ -306,32 +374,33 @@ static mxArray* create_matlab_image (lf_obj_handle_t ohandle, bool is_codec)
 int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
+   struct mm *mm = &inst->mm;
 
-   mxArray *matlab_img = create_matlab_image(ohandle, inst->is_codec);
+   mxArray *matlab_img = create_matlab_image(mm, ohandle, inst->is_codec);
    printf("number of mxArray elements: %d\n",
-	  mxGetNumberOfElements(matlab_img));
+	  mm->mxGetNumberOfElements(matlab_img));
    printf("number of mxArray dimensions: %d\n",
-	  mxGetNumberOfDimensions(matlab_img));
+	  mm->mxGetNumberOfDimensions(matlab_img));
    printf("mxArray class: %d\n",
-	  mxGetClassID(matlab_img));
+	  mm->mxGetClassID(matlab_img));
 
-   engPutVariable(inst->eng, matlab_img_name, matlab_img);
+   mm->engPutVariable(inst->eng, matlab_img_name, matlab_img);
 
    printf("going to eval \"%s\"\n", inst->eval_matlab_cmd);
-   engEvalString(inst->eng, inst->eval_matlab_cmd);
+   mm->engEvalString(inst->eng, inst->eval_matlab_cmd);
 
    if (inst->is_codec) {
      /* also make an rgbimage for others */
-     mxDestroyArray(matlab_img);
-     matlab_img = engGetVariable(inst->eng, matlab_img_name);
-     populate_rgbimage(inst->eng, matlab_img, ohandle);
+     mm->mxDestroyArray(matlab_img);
+     matlab_img = mm->engGetVariable(inst->eng, matlab_img_name);
+     populate_rgbimage(mm, inst->eng, matlab_img, ohandle);
    }
 
-   mxArray *matlab_ret = engGetVariable(inst->eng, "ans");
-   double matlab_ret_d = *(mxGetPr(matlab_ret));
+   mxArray *matlab_ret = mm->engGetVariable(inst->eng, "ans");
+   double matlab_ret_d = *(mm->mxGetPr(matlab_ret));
 
-   mxDestroyArray(matlab_img);
-   mxDestroyArray(matlab_ret);
+   mm->mxDestroyArray(matlab_img);
+   mm->mxDestroyArray(matlab_ret);
 
    lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&matlab_ret_d);
 
@@ -342,7 +411,8 @@ int f_fini_matlab_exec (void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
 
-   engClose(inst->eng);
+   inst->mm.engClose(inst->eng);
+   dlclose_matlab(inst);
    destroy_src_dir(inst->src_dir_name);
    free(inst);
 
