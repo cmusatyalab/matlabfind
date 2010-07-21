@@ -4,7 +4,7 @@
  *  Version 1
  *
  *  Copyright (c) 2002-2005 Intel Corporation
- *  Copyright (c) 2008 Carnegie Mellon University
+ *  Copyright (c) 2008, 2010 Carnegie Mellon University
  *  All Rights Reserved.
  *
  *  This software is distributed under the terms of the Eclipse Public
@@ -66,7 +66,7 @@ matlab_search::matlab_search(const char *name, char *descr)
 	eval_function = strdup("eval");
 	init_function = strdup("init");
 	threshold = strdup("0");
-	source_folder = strdup(".");
+	source_folder = NULL;
 
 	edit_window = NULL;
 
@@ -232,7 +232,7 @@ matlab_search::edit_search()
 							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
 	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
 	if (source_folder != NULL) {
-		gtk_file_chooser_set_filename(GTK_FILE_CHOOSER(source_folder_button), source_folder);
+		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
 	/* make everything visible */
@@ -256,6 +256,7 @@ matlab_search::save_edits()
 	gchar *name_used;
 	gboolean success;
 	gchar *blob_data;
+	gchar *tmp;
 
 	if (edit_window == NULL) {
 		return;
@@ -280,7 +281,7 @@ matlab_search::save_edits()
 	assert(init_function != NULL);
 	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
-	source_folder = strdup(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(source_folder_button)));
+	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
 	assert(source_folder != NULL);
 
 	/* blob */
@@ -289,7 +290,9 @@ matlab_search::save_edits()
 	fd = g_file_open_tmp(NULL, &name_used, NULL);
 	g_assert(fd >= 0);
 
-	blob_len = tar_blob(source_folder, fd);
+	tmp = g_filename_from_uri(source_folder, NULL, NULL);
+	blob_len = tar_blob(tmp, fd);
+	g_free(tmp);
 	g_assert(blob_len >= 0);
 
 	success = g_file_get_contents(name_used, &blob_data, NULL, NULL);
@@ -348,7 +351,10 @@ matlab_search::write_config(FILE *ostream, const char *dirname)
  	fprintf(ostream, "%s %s\n", EVAL_FUNCTION_ID, eval_function);
  	fprintf(ostream, "%s %s \n", INIT_FUNCTION_ID, init_function);
  	fprintf(ostream, "%s %s \n", THRESHOLD_ID, threshold);
- 	fprintf(ostream, "%s %s \n", SOURCE_FOLDER_ID, source_folder);
+
+	if (source_folder != NULL) {
+		fprintf(ostream, "%s %s \n", SOURCE_FOLDER_ID, source_folder);
+	}
 }
 
 /* Region match isn't meaningful for this search */
