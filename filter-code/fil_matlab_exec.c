@@ -70,7 +70,7 @@ static Engine *open_engine_in_src_dir(const char *src_dir_name)
    Engine *ret;
    char current_path[PATH_MAX];
 
-   if (getcwd(current_path, sizeof(current_path)) < 0) {
+   if (getcwd(current_path, sizeof(current_path)) == NULL) {
       return NULL;
    }
 
