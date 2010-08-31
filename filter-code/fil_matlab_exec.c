@@ -218,8 +218,8 @@ static void dlclose_matlab(struct filter_instance *inst) {
 }
 
 
-int f_init_matlab_exec (int num_arg, char **args, int bloblen,
-                        void *blob_data, const char *filter_name,
+int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
+                        const void *blob_data, const char *filter_name,
                         void **filter_args)
 {
    printf("MATLAB exec filter executing!\n");
@@ -324,17 +324,17 @@ static mxArray* create_matlab_image (struct mm *mm, lf_obj_handle_t ohandle, boo
    mxArray *matlab_img;
 
    size_t len;
-   unsigned char *diamond_attr;
+   const void *diamond_attr;
 
    if (!is_codec) {
      /* we need a 3d matlab array of height x width x bpp */
      size_t dims[3];
 
      lf_ref_attr(ohandle, "_rows.int", &len, &diamond_attr);
-     dims[0] = *((int *) diamond_attr);
+     dims[0] = *((const int *) diamond_attr);
 
      lf_ref_attr(ohandle, "_cols.int", &len, &diamond_attr);
-     dims[1] = *((int *) diamond_attr);
+     dims[1] = *((const int *) diamond_attr);
 
      dims[2] = matlab_bytes_per_pixel;
 
@@ -352,7 +352,7 @@ static mxArray* create_matlab_image (struct mm *mm, lf_obj_handle_t ohandle, boo
      int tmpfd = g_file_open_tmp(NULL, &tmp, NULL);
      FILE *tmpfile = fdopen(tmpfd, "w");
      size_t len;
-     unsigned char *buf;
+     const void *buf;
 
      lf_ref_attr(ohandle, "", &len, &buf);
      fwrite(buf, len, 1, tmpfile);
