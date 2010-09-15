@@ -63,9 +63,9 @@ search_init()
 matlab_search::matlab_search(const char *name, char *descr)
 		: img_search(name, descr)
 {
-	eval_function = strdup("eval");
-	init_function = strdup("init");
-	threshold = strdup("0");
+	eval_function = g_strdup("eval");
+	init_function = g_strdup("init");
+	threshold = g_strdup("0");
 	source_folder = NULL;
 
 	edit_window = NULL;
@@ -76,16 +76,16 @@ matlab_search::matlab_search(const char *name, char *descr)
 matlab_search::~matlab_search()
 {
 	if (eval_function) {
-		free(eval_function);
+		g_free(eval_function);
 	}
 	if (init_function) {
-		free(init_function);
+		g_free(init_function);
 	}
 	if (threshold) {
-		free(threshold);
+		g_free(threshold);
 	}
 	if (source_folder) {
-		free(source_folder);
+		g_free(source_folder);
 	}
 
 	g_free(get_auxiliary_data());
@@ -100,22 +100,22 @@ matlab_search::handle_config(int nconf, char **data)
 
 	if (strcmp(EVAL_FUNCTION_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		eval_function = strdup(data[1]);
+		eval_function = g_strdup(data[1]);
 		assert(eval_function != NULL);
 		err = 0;
 	} else if (strcmp(INIT_FUNCTION_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		init_function = strdup(data[1]);
+		init_function = g_strdup(data[1]);
 		assert(init_function != NULL);
 		err = 0;
 	} else if (strcmp(THRESHOLD_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		threshold = strdup(data[1]);
+		threshold = g_strdup(data[1]);
 		assert(threshold != NULL);
 		err = 0;
 	} else if (strcmp(SOURCE_FOLDER_ID, data[0]) == 0) {
 		assert(nconf > 1);
-		source_folder = strdup(data[1]);
+		source_folder = g_strdup(data[1]);
 		assert(source_folder != NULL);
 		err = 0;
 	} else {
@@ -263,25 +263,25 @@ matlab_search::save_edits()
 	}
 
 	if (eval_function != NULL) {
-		free(eval_function);
+		g_free(eval_function);
 	}
 	if (init_function != NULL) {
-		free(init_function);
+		g_free(init_function);
 	}
 	if (threshold != NULL) {
-		free(threshold);
+		g_free(threshold);
 	}
 	if (source_folder != NULL) {
-		free(source_folder);
+		g_free(source_folder);
 	}
 
-	eval_function = strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
+	eval_function = g_strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
 	assert(eval_function != NULL);
-	init_function = strdup(gtk_entry_get_text(GTK_ENTRY(init_function_entry)));
+	init_function = g_strdup(gtk_entry_get_text(GTK_ENTRY(init_function_entry)));
 	assert(init_function != NULL);
-	threshold = strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
+	threshold = g_strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
-	source_folder = strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
+	source_folder = g_strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
 	assert(source_folder != NULL);
 
 	/* blob */
