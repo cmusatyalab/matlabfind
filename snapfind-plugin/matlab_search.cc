@@ -88,7 +88,7 @@ matlab_search::~matlab_search()
 		free(source_folder);
 	}
 
-	free(get_auxiliary_data());
+	g_free(get_auxiliary_data());
 	return;
 }
 
@@ -285,7 +285,7 @@ matlab_search::save_edits()
 	assert(source_folder != NULL);
 
 	/* blob */
-	free(get_auxiliary_data());
+	g_free(get_auxiliary_data());
 
 	fd = g_file_open_tmp(NULL, &name_used, NULL);
 	g_assert(fd >= 0);
