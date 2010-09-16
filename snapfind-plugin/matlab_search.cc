@@ -141,6 +141,89 @@ cb_close_edit_window(GtkWidget* item, gpointer data)
 	search->close_edit_win();
 }
 
+static void
+cb_choose_folder(GtkFileChooser* item, gpointer data)
+{
+	matlab_search *    search;
+	search = (matlab_search *)data;
+	search->populate_function_menus();
+}
+
+void
+matlab_search::populate_function_menus()
+{
+	char *uri;
+	char *dirpath;
+	GDir *dir;
+	const gchar *name;
+	char *path;
+	GList *names = NULL;
+	GList *cur;
+	char *initial_init_func;
+	char *initial_eval_func;
+	char *tmp;
+
+	/* Determine which items to select initially */
+	initial_init_func = gtk_combo_box_get_active_text(GTK_COMBO_BOX(init_function_menu));
+	if (initial_init_func == NULL || !strcmp("", initial_init_func)) {
+		g_free(initial_init_func);
+		initial_init_func = g_strdup(init_function);
+	}
+	initial_eval_func = gtk_combo_box_get_active_text(GTK_COMBO_BOX(eval_function_menu));
+	if (initial_eval_func == NULL) {
+		initial_eval_func = g_strdup(eval_function);
+	}
+
+	/* Purge existing menus */
+	for (; function_menu_length; function_menu_length--) {
+		gtk_combo_box_remove_text(GTK_COMBO_BOX(init_function_menu), 0);
+		gtk_combo_box_remove_text(GTK_COMBO_BOX(eval_function_menu), 0);
+	}
+	/* Init menu has an extra entry */
+	gtk_combo_box_remove_text(GTK_COMBO_BOX(init_function_menu), 0);
+
+	/* Gather a list of files in the source folder */
+	uri = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button));
+	dirpath = uri ? g_filename_from_uri(uri, NULL, NULL) : NULL;
+	g_free(uri);
+	dir = g_dir_open(dirpath, 0, NULL);
+	if (dir != NULL) {
+		while ((name = g_dir_read_name(dir))) {
+			path = g_strdup_printf("%s/%s", dirpath, name);
+			if (name[0] != '.' && g_file_test(path, G_FILE_TEST_IS_REGULAR) &&
+			    g_str_has_suffix(name, ".m")) {
+				tmp = g_strdup(name);
+				g_strrstr(tmp, ".m")[0] = 0;
+				names = g_list_prepend(names, tmp);
+			}
+			g_free(path);
+		}
+		g_dir_close(dir);
+	}
+	g_free(dirpath);
+	names = g_list_sort(names, (GCompareFunc) strcmp);
+
+	/* Populate the menus */
+	gtk_combo_box_append_text(GTK_COMBO_BOX(init_function_menu), "");
+	gtk_combo_box_set_active(GTK_COMBO_BOX(init_function_menu), 0);
+	gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), -1);
+	for (cur = g_list_first(names); cur; cur = g_list_next(cur)) {
+		tmp = (char *) cur->data;
+		gtk_combo_box_append_text(GTK_COMBO_BOX(init_function_menu), tmp);
+		gtk_combo_box_append_text(GTK_COMBO_BOX(eval_function_menu), tmp);
+		if (!g_strcmp0(tmp, initial_init_func)) {
+			gtk_combo_box_set_active(GTK_COMBO_BOX(init_function_menu), function_menu_length + 1);
+		}
+		if (!g_strcmp0(tmp, initial_eval_func)) {
+			gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), function_menu_length);
+		}
+		function_menu_length++;
+		g_free(tmp);
+	}
+	g_list_free(names);
+	g_free(initial_init_func);
+	g_free(initial_eval_func);
+}
 
 void
 matlab_search::edit_search()
@@ -194,45 +277,43 @@ matlab_search::edit_search()
         gtk_container_set_border_width(GTK_CONTAINER(table), 10);
 	gtk_box_pack_start(GTK_BOX(box), table, FALSE, TRUE, 0);
 
-	/* set the first row label and text entry for the eval function */
-	widget = gtk_label_new("Eval function");
+	/* set the first row label and file chooser button for the source directory */
+	widget = gtk_label_new("Source folder");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
-	eval_function_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_entry, 1, 2, 0, 1);
-	if (eval_function != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(eval_function_entry), eval_function);
+	source_folder_button = gtk_file_chooser_button_new("Select a Folder",
+							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 0, 1);
+	g_signal_connect(G_OBJECT(source_folder_button), "selection-changed",
+	                 G_CALLBACK(cb_choose_folder), this);
+	if (source_folder != NULL) {
+		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
 	}
 
-	/* set the second row label and text entry for the init function */
+	/* set the second row label and popup menu for the init function */
 	widget = gtk_label_new("Init function");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 1, 2);
-	init_function_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), init_function_entry, 1, 2, 1, 2);
-	if (init_function != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(init_function_entry), init_function);
-	}
+	init_function_menu = gtk_combo_box_new_text();
+	gtk_table_attach_defaults(GTK_TABLE(table), init_function_menu, 1, 2, 1, 2);
 
-	/* set the third row label and text entry for the threshold */
-	widget = gtk_label_new("Threshold");
+	/* set the third row label and popup menu for the eval function */
+	widget = gtk_label_new("Eval function");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 2, 3);
-	threshold_entry = gtk_entry_new();
-	gtk_table_attach_defaults(GTK_TABLE(table), threshold_entry, 1, 2, 2, 3);
-	if (threshold != NULL) {
-		gtk_entry_set_text(GTK_ENTRY(threshold_entry), threshold);
-	}
+	eval_function_menu = gtk_combo_box_new_text();
+	gtk_table_attach_defaults(GTK_TABLE(table), eval_function_menu, 1, 2, 2, 3);
+	function_menu_length = 0;
+	populate_function_menus();
 
-	/* set the fourth row label and file chooser button for the source directory */
-        widget = gtk_label_new("Source folder");
+	/* set the fourth row label and text entry for the threshold */
+	widget = gtk_label_new("Threshold");
 	gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT);
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 3, 4);
-	source_folder_button = gtk_file_chooser_button_new("Select a Folder",
-							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 3, 4);
-	if (source_folder != NULL) {
-		gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(source_folder_button), source_folder);
+	threshold_entry = gtk_entry_new();
+	gtk_table_attach_defaults(GTK_TABLE(table), threshold_entry, 1, 2, 3, 4);
+	if (threshold != NULL) {
+		gtk_entry_set_text(GTK_ENTRY(threshold_entry), threshold);
 	}
 
 	/* make everything visible */
@@ -275,10 +356,15 @@ matlab_search::save_edits()
 		g_free(source_folder);
 	}
 
-	eval_function = g_strdup(gtk_entry_get_text(GTK_ENTRY(eval_function_entry)));
-	assert(eval_function != NULL);
-	init_function = g_strdup(gtk_entry_get_text(GTK_ENTRY(init_function_entry)));
-	assert(init_function != NULL);
+	eval_function = gtk_combo_box_get_active_text(GTK_COMBO_BOX(eval_function_menu));
+	if (eval_function == NULL) {
+		eval_function = g_strdup("1");
+	}
+	init_function = gtk_combo_box_get_active_text(GTK_COMBO_BOX(init_function_menu));
+	if (!strcmp(init_function, "")) {
+		g_free(init_function);
+		init_function = g_strdup("1");
+	}
 	threshold = g_strdup(gtk_entry_get_text(GTK_ENTRY(threshold_entry)));
 	assert(threshold != NULL);
 	source_folder = g_strdup(gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(source_folder_button)));
