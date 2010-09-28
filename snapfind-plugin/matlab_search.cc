@@ -211,10 +211,10 @@ matlab_search::populate_function_menus()
 		tmp = (char *) cur->data;
 		gtk_combo_box_append_text(GTK_COMBO_BOX(init_function_menu), tmp);
 		gtk_combo_box_append_text(GTK_COMBO_BOX(eval_function_menu), tmp);
-		if (!g_strcmp0(tmp, initial_init_func)) {
+		if (initial_init_func != NULL && !strcmp(tmp, initial_init_func)) {
 			gtk_combo_box_set_active(GTK_COMBO_BOX(init_function_menu), function_menu_length + 1);
 		}
-		if (!g_strcmp0(tmp, initial_eval_func)) {
+		if (initial_eval_func != NULL && !strcmp(tmp, initial_eval_func)) {
 			gtk_combo_box_set_active(GTK_COMBO_BOX(eval_function_menu), function_menu_length);
 		}
 		function_menu_length++;
