@@ -283,6 +283,9 @@ matlab_search::edit_search()
 	gtk_table_attach_defaults(GTK_TABLE(table), widget, 0, 1, 0, 1);
 	source_folder_button = gtk_file_chooser_button_new("Select a Folder",
 							   GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+	/* rhbz #638495 */
+	gtk_file_chooser_set_show_hidden(GTK_FILE_CHOOSER(source_folder_button),
+					 FALSE);
 	gtk_table_attach_defaults(GTK_TABLE(table), source_folder_button, 1, 2, 0, 1);
 	g_signal_connect(G_OBJECT(source_folder_button), "selection-changed",
 	                 G_CALLBACK(cb_choose_folder), this);
