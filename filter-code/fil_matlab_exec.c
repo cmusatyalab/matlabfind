@@ -3,7 +3,7 @@
  *  A Diamond application for interoperating with MATLAB
  *  Version 1
  *
- *  Copyright (c) 2006-2008 Carnegie Mellon University
+ *  Copyright (c) 2006-2011 Carnegie Mellon University
  *  All Rights Reserved.
  *
  *  This software is distributed under the terms of the Eclipse Public
@@ -245,8 +245,8 @@ int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
    snprintf(inst->eval_matlab_cmd, sizeof(inst->eval_matlab_cmd), "[ans image] = %s(%s)",
 	    args[1], matlab_img_name);
 
-   safe_strncpy(inst->src_dir_name, "/tmp/matlab_src_XXXXXX",
-		sizeof(inst->src_dir_name));
+   g_snprintf(inst->src_dir_name, sizeof(inst->src_dir_name),
+		"%s/matlab_src_XXXXXX", g_get_tmp_dir());
 
    if (mkdtemp(inst->src_dir_name) == NULL) {
       free(inst);
