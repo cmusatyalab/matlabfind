@@ -36,7 +36,6 @@ typedef struct c MATFile;
 
 struct mm {
   Engine * (*engOpen)(const char *arg0);
-  int (*engClose)(Engine *arg0);
   int (*engPutVariable)(Engine *arg0, const char *arg1, const mxArray *arg2);
   int (*engEvalString)(Engine *arg0, const char *arg1);
   mxArray * (*engGetVariable)(Engine *arg0, const char *arg1);

@@ -41,36 +41,11 @@ static const int matlab_bytes_per_pixel = 3;
 #define matlab_img_name "image"
 
 struct filter_instance {
-  char src_dir_name[PATH_MAX];
-  char init_matlab_cmd[512];
-  char eval_matlab_cmd[512];
+  gchar *eval_matlab_cmd;
   Engine *eng;
   bool is_codec;
-
-  // dlopen stuff
-  void *dl_eng;
-  void *dl_mx;
-  void *dl_mat;
   struct mm mm;
 };
-
-static void destroy_src_dir(const char *src_dir_name)
-{
-   DIR *src_dir = opendir(src_dir_name);
-   if (src_dir) {
-      struct dirent *ent;
-      while ( (ent = readdir(src_dir)) ) {
-	 char path[PATH_MAX];
-
-	 snprintf(path, sizeof(path), "%s/%s", src_dir_name, ent->d_name);
-	 unlink(path);
-      }
-
-      closedir(src_dir);
-      rmdir(src_dir_name);
-   }
-
-}
 
 static Engine *open_engine_in_src_dir(struct mm *mm, const char *src_dir_name)
 {
@@ -97,10 +72,6 @@ static Engine *open_engine_in_src_dir(struct mm *mm, const char *src_dir_name)
    printf("engOpen done\n");
 
    if (chdir(current_path) < 0) {
-      if (ret) {
-	 mm->engClose(ret);
-      }
-
       return NULL;
    }
 
@@ -205,19 +176,6 @@ static void *dlsym_or_die(void *handle, const char *sym_name) {
   return sym;
 }
 
-static void dlclose_matlab(struct filter_instance *inst) {
-  if (inst->dl_eng) {
-    dlclose(inst->dl_eng);
-  }
-  if (inst->dl_mx) {
-    dlclose(inst->dl_mx);
-  }
-  if (inst->dl_mat) {
-    dlclose(inst->dl_mat);
-  }
-}
-
-
 int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
                         const void *blob_data, const char *filter_name,
                         void **filter_args)
@@ -229,86 +187,82 @@ int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
 
    struct mm *mm = &inst->mm;
 
+   void *dl_eng;
+   void *dl_mx;
+   void *dl_mat;
+
+   gchar *src_dir_name;
+   const gchar *init_matlab_cmd;
+
    if (!inst) {
       return -1;
    }
 
    if (num_arg < 2) {
-      free(inst);
       printf("Invalid arguments\n");
       return -1;
    }
    
-   safe_strncpy(inst->init_matlab_cmd, args[0],
-		sizeof(inst->init_matlab_cmd));
-
-   snprintf(inst->eval_matlab_cmd, sizeof(inst->eval_matlab_cmd), "[ans image] = %s(%s)",
+   init_matlab_cmd = args[0];
+   inst->eval_matlab_cmd = g_strdup_printf("[ans image] = %s(%s)",
 	    args[1], matlab_img_name);
 
-   g_snprintf(inst->src_dir_name, sizeof(inst->src_dir_name),
-		"%s/matlab_src_XXXXXX", g_get_tmp_dir());
+   src_dir_name = g_strdup_printf("%s/matlab_src_XXXXXX", g_get_tmp_dir());
 
-   if (mkdtemp(inst->src_dir_name) == NULL) {
-      free(inst);
+   if (mkdtemp(src_dir_name) == NULL) {
       printf("Could not create directory\n");
       return -1;
    }
 
    printf("want to untar blob of %d size\n", bloblen);
-   if (untar_blob(inst->src_dir_name, bloblen, (char *)blob_data) < 0) {
+   if (untar_blob(src_dir_name, bloblen, (char *)blob_data) < 0) {
       printf("Colud not untar source\n");
-      destroy_src_dir(inst->src_dir_name);
-      free(inst);
       return -1;
    }
 
    // dlopen matlab, because we don't have access to it from Fedora mock
-   inst->dl_eng = dlopen("libeng.so", RTLD_LAZY | RTLD_LOCAL);
-   inst->dl_mx = dlopen("libmx.so", RTLD_LAZY | RTLD_LOCAL);
-   inst->dl_mat = dlopen("libmat.so", RTLD_LAZY | RTLD_LOCAL);
+   dl_eng = dlopen("libeng.so", RTLD_LAZY | RTLD_LOCAL);
+   dl_mx = dlopen("libmx.so", RTLD_LAZY | RTLD_LOCAL);
+   dl_mat = dlopen("libmat.so", RTLD_LAZY | RTLD_LOCAL);
 
    // check for failure
-   if ((inst->dl_eng == NULL) || (inst->dl_mx == NULL) || (inst->dl_mat == NULL)) {
-     dlclose_matlab(inst);
-
-     free(inst);
+   if ((dl_eng == NULL) || (dl_mx == NULL) || (dl_mat == NULL)) {
      return -1;
    }
 
    // dlsym everything
-   mm->engOpen = dlsym_or_die(inst->dl_eng, "engOpen");
-   mm->engClose = dlsym_or_die(inst->dl_eng, "engClose");
-   mm->engPutVariable = dlsym_or_die(inst->dl_eng, "engPutVariable");
-   mm->engEvalString = dlsym_or_die(inst->dl_eng, "engEvalString");
-   mm->engGetVariable = dlsym_or_die(inst->dl_eng, "engGetVariable");
+   mm->engOpen = dlsym_or_die(dl_eng, "engOpen");
+   mm->engPutVariable = dlsym_or_die(dl_eng, "engPutVariable");
+   mm->engEvalString = dlsym_or_die(dl_eng, "engEvalString");
+   mm->engGetVariable = dlsym_or_die(dl_eng, "engGetVariable");
 
-   mm->mxGetNumberOfDimensions = dlsym_or_die(inst->dl_eng, "mxGetNumberOfDimensions");
-   mm->mxDestroyArray = dlsym_or_die(inst->dl_eng, "mxDestroyArray");
-   mm->mxGetClassID = dlsym_or_die(inst->dl_eng, "mxGetClassID");
-   mm->mxGetDimensions = dlsym_or_die(inst->dl_eng, "mxGetDimensions");
-   mm->mxGetData = dlsym_or_die(inst->dl_eng, "mxGetData");
-   mm->mxCreateNumericArray = dlsym_or_die(inst->dl_eng, "mxCreateNumericArray");
-   mm->mxGetNumberOfElements = dlsym_or_die(inst->dl_eng, "mxGetNumberOfElements");
-   mm->mxGetPr = dlsym_or_die(inst->dl_eng, "mxGetPr");
+   mm->mxGetNumberOfDimensions = dlsym_or_die(dl_eng, "mxGetNumberOfDimensions");
+   mm->mxDestroyArray = dlsym_or_die(dl_eng, "mxDestroyArray");
+   mm->mxGetClassID = dlsym_or_die(dl_eng, "mxGetClassID");
+   mm->mxGetDimensions = dlsym_or_die(dl_eng, "mxGetDimensions");
+   mm->mxGetData = dlsym_or_die(dl_eng, "mxGetData");
+   mm->mxCreateNumericArray = dlsym_or_die(dl_eng, "mxCreateNumericArray");
+   mm->mxGetNumberOfElements = dlsym_or_die(dl_eng, "mxGetNumberOfElements");
+   mm->mxGetPr = dlsym_or_die(dl_eng, "mxGetPr");
 
-   mm->matOpen = dlsym_or_die(inst->dl_eng, "matOpen");
-   mm->matGetNextVariable = dlsym_or_die(inst->dl_eng, "matGetNextVariable");
-   mm->matClose = dlsym_or_die(inst->dl_eng, "matClose");
+   mm->matOpen = dlsym_or_die(dl_eng, "matOpen");
+   mm->matGetNextVariable = dlsym_or_die(dl_eng, "matGetNextVariable");
+   mm->matClose = dlsym_or_die(dl_eng, "matClose");
 
 
-   printf("Opening MATLAB engine in dir \"%s\"\n", inst->src_dir_name);
+   printf("Opening MATLAB engine in dir \"%s\"\n", src_dir_name);
 
-   inst->eng = open_engine_in_src_dir(mm, inst->src_dir_name);
+   inst->eng = open_engine_in_src_dir(mm, src_dir_name);
    if (!inst->eng) {
       printf("Could not open engine\n");
-      destroy_src_dir(inst->src_dir_name);
-      free(inst);
       return -1;
    }
 
+   g_free(src_dir_name);
+
    printf("Running init function in MATLAB\n");
 
-   mm->engEvalString(inst->eng, inst->init_matlab_cmd);
+   mm->engEvalString(inst->eng, init_matlab_cmd);
 
    // codec?
    inst->is_codec = (strcmp("RGB", filter_name) == 0);
@@ -409,12 +363,5 @@ int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 
 int f_fini_matlab_exec (void *filter_args)
 {
-   struct filter_instance *inst = (struct filter_instance *)filter_args;
-
-   inst->mm.engClose(inst->eng);
-   dlclose_matlab(inst);
-   destroy_src_dir(inst->src_dir_name);
-   free(inst);
-
    return 0;
 }
