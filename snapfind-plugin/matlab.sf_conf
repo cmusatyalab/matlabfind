@@ -1,2 +1,2 @@
 GUI_LIB		./matlab_search.so
-SEARCHLET_LIB	./fil_matlab_exec.so
+SEARCHLET_LIB	./fil_matlab_exec

@@ -176,6 +176,7 @@ static void *dlsym_or_die(void *handle, const char *sym_name) {
   return sym;
 }
 
+static
 int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
                         const void *blob_data, const char *filter_name,
                         void **filter_args)
@@ -325,7 +326,7 @@ static mxArray* create_matlab_image (struct mm *mm, lf_obj_handle_t ohandle, boo
    return matlab_img;
 }
 
-int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
+static int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
    struct mm *mm = &inst->mm;
@@ -361,7 +362,4 @@ int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
    return (int)(matlab_ret_d);
 }
 
-int f_fini_matlab_exec (void *filter_args)
-{
-   return 0;
-}
+LF_MAIN(f_init_matlab_exec, f_eval_matlab_exec)

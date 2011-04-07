@@ -424,9 +424,7 @@ matlab_search::write_fspec(FILE *ostream)
 	fprintf(ostream, "\n");
 	fprintf(ostream, "THRESHOLD  %s\n", threshold);
 	fprintf(ostream, "MERIT  10000\n");
-	fprintf(ostream, "EVAL_FUNCTION  f_eval_matlab_exec  # eval function \n");
-	fprintf(ostream, "INIT_FUNCTION  f_init_matlab_exec  # init function \n");
-	fprintf(ostream, "FINI_FUNCTION  f_fini_matlab_exec  # fini function \n");
+	fprintf(ostream, "SIGNATURE @\n");
 	fprintf(ostream, "ARG  %s\n", init_function );
 	fprintf(ostream, "ARG  %s\n", eval_function );
 	fprintf(ostream, "\n");
