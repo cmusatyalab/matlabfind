@@ -75,6 +75,11 @@ static Engine *open_engine_in_src_dir(struct mm *mm, const char *src_dir_name)
       return NULL;
    }
 
+   if (ret == NULL && !g_file_test("/bin/csh", G_FILE_TEST_EXISTS)) {
+      // Helpful debugging hint: engOpen() runs matlab via csh
+      printf("engOpen failed: missing /bin/csh\n");
+   }
+
    return ret;
 }
 
