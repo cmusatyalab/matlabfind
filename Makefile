@@ -27,7 +27,7 @@ clean:
 	$(RM) -r filter-code/fil_matlab_exec quick-tar/*.o snapfind-plugin/*.so
 
 install: all snapfind-plugin/matlab.sf_conf
-	$(INSTALL) filter-code/*.so snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
+	$(INSTALL) filter-code/fil_matlab_exec snapfind-plugin/*.so $(SNAPFIND_LIBDIR)
 	$(INSTALL) -m 644 snapfind-plugin/*.sf_conf $(SNAPFIND_LIBDIR)
 
 
