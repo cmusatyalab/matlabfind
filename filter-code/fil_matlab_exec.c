@@ -47,18 +47,9 @@ struct filter_instance {
   struct mm mm;
 };
 
-static Engine *open_engine_in_src_dir(struct mm *mm, const char *src_dir_name)
+static Engine *open_engine(struct mm *mm)
 {
    Engine *ret;
-   char current_path[PATH_MAX];
-
-   if (getcwd(current_path, sizeof(current_path)) == NULL) {
-      return NULL;
-   }
-
-   if (chdir(src_dir_name) < 0) {
-      return NULL;
-   }
 
    // try to not have MATLAB screw up with LS_COLORS or other things
    clearenv();
@@ -70,10 +61,6 @@ static Engine *open_engine_in_src_dir(struct mm *mm, const char *src_dir_name)
    printf("Trying to do an engOpen\n");
    ret = mm->engOpen("i386 " MATLAB_EXE_PATH);
    printf("engOpen done\n");
-
-   if (chdir(current_path) < 0) {
-      return NULL;
-   }
 
    if (ret == NULL && !g_file_test("/bin/csh", G_FILE_TEST_EXISTS)) {
       // Helpful debugging hint: engOpen() runs matlab via csh
@@ -220,6 +207,11 @@ int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
       return -1;
    }
 
+   if (chdir(src_dir_name) < 0) {
+      printf("Could not chdir into directory\n");
+      return -1;
+   }
+
    printf("want to untar blob of %d size\n", bloblen);
    if (untar_blob(src_dir_name, bloblen, (char *)blob_data) < 0) {
       printf("Colud not untar source\n");
@@ -258,13 +250,13 @@ int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
 
    printf("Opening MATLAB engine in dir \"%s\"\n", src_dir_name);
 
-   inst->eng = open_engine_in_src_dir(mm, src_dir_name);
+   g_free(src_dir_name);
+
+   inst->eng = open_engine(mm);
    if (!inst->eng) {
       printf("Could not open engine\n");
       return -1;
    }
-
-   g_free(src_dir_name);
 
    printf("Running init function in MATLAB\n");
 
