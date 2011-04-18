@@ -1,6 +1,5 @@
 *~
 *.bak
-*.o
 *.jar
 
 bin/

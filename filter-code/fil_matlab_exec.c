@@ -25,9 +25,9 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <dlfcn.h>
+#include <archive.h>
 
 #include "lib_filter.h"
-#include "quick_tar.h"
 #include "matlab-compat.h"
 
 #ifndef MATLAB_EXE_PATH
@@ -169,6 +169,27 @@ static void *dlsym_or_die(void *handle, const char *sym_name) {
 }
 
 static
+void extract_zip(const void *data, size_t len)
+{
+   struct archive *arch = archive_read_new();
+   struct archive_entry *ent;
+   int ret;
+
+   g_assert(arch != NULL);
+   g_assert(!archive_read_support_format_zip(arch));
+   g_assert(!archive_read_open_memory(arch, (void *) data, len));
+   while (!(ret = archive_read_next_header(arch, &ent))) {
+     if (archive_read_extract(arch, ent, ARCHIVE_EXTRACT_SECURE_SYMLINKS |
+                              ARCHIVE_EXTRACT_SECURE_NODOTDOT)) {
+       fprintf(stderr, "%s\n", archive_error_string(arch));
+       abort();
+     }
+   }
+   g_assert(ret == ARCHIVE_EOF);
+   g_assert(!archive_read_finish(arch));
+}
+
+static
 int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
                         const void *blob_data, const char *filter_name,
                         void **filter_args)
@@ -212,11 +233,7 @@ int f_init_matlab_exec (int num_arg, const char * const *args, int bloblen,
       return -1;
    }
 
-   printf("want to untar blob of %d size\n", bloblen);
-   if (untar_blob(src_dir_name, bloblen, (char *)blob_data) < 0) {
-      printf("Colud not untar source\n");
-      return -1;
-   }
+   extract_zip(blob_data, bloblen);
 
    // dlopen matlab, because we don't have access to it from Fedora mock
    dl_eng = dlopen("libeng.so", RTLD_LAZY | RTLD_LOCAL);
