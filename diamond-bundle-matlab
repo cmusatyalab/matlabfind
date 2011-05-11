@@ -53,16 +53,16 @@ def clean_macro_name(name):
 
 if __name__ == '__main__':
     parser = OptionParser(
-        usage = '%prog [-h] [options] eval-macro [supporting-files...]',
-        description = 'Package a Diamond filter written in MATLAB into an OpenDiamond filter bundle.',
+        usage='%prog [-h] [options] eval-macro [supporting-files...]',
+        description='Package a Diamond filter written in MATLAB into an OpenDiamond filter bundle.',
     )
-    parser.add_option('-o', dest = 'outfile', metavar = 'outfile',
-            help = 'path to output file')
-    parser.add_option('-n', dest = 'name', metavar = 'display-name',
-            default = 'MATLAB Filter',
-            help = 'display name for filter')
-    parser.add_option('-i', dest = 'init_file', metavar = 'init-macro',
-            help = 'path to initialization macro')
+    parser.add_option('-o', dest='outfile', metavar='outfile',
+            help='path to output file')
+    parser.add_option('-n', dest='name', metavar='display-name',
+            default='MATLAB Filter',
+            help='display name for filter')
+    parser.add_option('-i', dest='init_file', metavar='init-macro',
+            help='path to initialization macro')
     opts, args = parser.parse_args()
     if len(args) < 1:
         parser.error('no eval macro specified')
