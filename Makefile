@@ -2,7 +2,7 @@ INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
 SNAPFIND_LIBDIR=/opt/snapfind/lib
 
-MATLAB_ROOT_DIR=/afs/cs.cmu.edu/local/matlab/i386_fc5/7.6/lib/matlab7
+MATLAB_ROOT_DIR=/opt/matlab
 MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
 MATLAB_EXE_PATH=${MATLAB_ROOT_DIR}/bin/matlab
 
