@@ -340,7 +340,7 @@ static mxArray* create_matlab_image (struct mm *mm, lf_obj_handle_t ohandle, boo
    return matlab_img;
 }
 
-static int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
+static double f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
 {
    struct filter_instance *inst = (struct filter_instance *)filter_args;
    struct mm *mm = &inst->mm;
@@ -371,9 +371,7 @@ static int f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
    mm->mxDestroyArray(matlab_img);
    mm->mxDestroyArray(matlab_ret);
 
-   lf_write_attr(ohandle, "_matlab_ans.double", sizeof(double), (unsigned char *)&matlab_ret_d);
-
-   return (int)(matlab_ret_d);
+   return matlab_ret_d;
 }
 
 LF_MAIN(f_init_matlab_exec, f_eval_matlab_exec)
