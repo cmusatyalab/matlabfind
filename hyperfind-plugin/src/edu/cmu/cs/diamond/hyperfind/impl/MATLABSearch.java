@@ -83,7 +83,7 @@ public class MATLABSearch extends HyperFindSearch {
                 evalMacroName.getBytes(), blob);
 
         this.settings = new SearchSettingsFrame(searchName, "filter", true,
-                1, true);
+                1, Double.POSITIVE_INFINITY, true);
         final MATLABSearch search = this;
         settings.addChangeListener(new ChangeListener() {
             @Override
@@ -175,8 +175,8 @@ public class MATLABSearch extends HyperFindSearch {
         List<String> args = new ArrayList<String>();
         args.add(initMacroName);
         args.add(evalMacroName);
-        Filter f = new Filter(getDigestedName(), c, settings.getThreshold(),
-                dependencies, args, blob);
+        Filter f = new Filter(getDigestedName(), c, settings.getMinScore(),
+                settings.getMaxScore(), dependencies, args, blob);
 
         List<Filter> filters = new ArrayList<Filter>();
         filters.add(f);
