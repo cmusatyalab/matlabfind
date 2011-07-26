@@ -12,9 +12,8 @@
 #
 
 import os
-from opendiamond.bundle import make_zipfile
+from opendiamond.bundle import bundle_macro
 from optparse import OptionParser
-import sys
 
 def clean_macro_name(name):
     if name is None:
@@ -26,13 +25,13 @@ def clean_macro_name(name):
 if __name__ == '__main__':
     parser = OptionParser(
         usage='%prog [-h] [options] eval-macro [supporting-files...]',
-        description='Package a Diamond filter written in MATLAB into an OpenDiamond filter bundle.',
+        description='Package a Diamond filter written in MATLAB into an OpenDiamond search bundle.',
     )
     parser.add_option('-o', dest='outfile', metavar='outfile',
             help='path to output file')
     parser.add_option('-n', dest='name', metavar='display-name',
-            default='MATLAB Filter',
-            help='display name for filter')
+            default='MATLAB Search',
+            help='display name for search')
     parser.add_option('-i', dest='init_file', metavar='init-macro',
             help='path to initialization macro')
     opts, args = parser.parse_args()
@@ -43,21 +42,13 @@ if __name__ == '__main__':
     eval = clean_macro_name(eval_file)
     outfile = opts.outfile
     if outfile is None:
-        outfile = os.path.splitext(eval_file)[0] + '.zip'
+        outfile = os.path.splitext(eval_file)[0] + '.search'
     files = list(args)
     if opts.init_file is not None:
         files.append(opts.init_file)
-    files = dict([(os.path.basename(f), f) for f in files])
-
-    manifest = {
-        'Plugin': 'MATLAB',
-        'Name': opts.name,
-        'InitFunction': init,
-        'EvalFunction': eval,
-    }
-    manifest = ''.join(['%s: %s\n' % (k, v) for k, v in manifest.items()])
 
     try:
-        make_zipfile(outfile, manifest, files)
+        bundle_macro(outfile, opts.name, 'fil_matlab_exec', [init, eval],
+                                files)
     except Exception, e:
         parser.error(str(e))
