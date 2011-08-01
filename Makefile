@@ -1,6 +1,6 @@
 INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
-SNAPFIND_LIBDIR=/opt/snapfind/lib
+FILTER_DIR=/usr/share/diamond/filters
 
 MATLAB_ROOT_DIR=/opt/matlab
 MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
@@ -18,7 +18,7 @@ clean:
 	$(RM) -r filter-code/fil_matlab_exec
 
 install: all
-	$(INSTALL) filter-code/fil_matlab_exec $(SNAPFIND_LIBDIR)
+	$(INSTALL) filter-code/fil_matlab_exec $(FILTER_DIR)
 
 
 .DUMMY: all clean install
