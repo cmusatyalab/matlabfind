@@ -1,6 +1,7 @@
 INSTALL := install
 CFLAGS := -fPIC -O2 -g -m32 -Wall -Wextra
 FILTER_DIR=/usr/share/diamond/filters
+BINDIR=/usr/bin
 
 MATLAB_ROOT_DIR=/opt/matlab
 MATLAB_LIBDIR=${MATLAB_ROOT_DIR}/bin/glnx86
@@ -19,6 +20,7 @@ clean:
 
 install: all
 	$(INSTALL) filter-code/fil_matlab_exec $(FILTER_DIR)
+	$(INSTALL) diamond-bundle-matlab $(BINDIR)
 
 
 .DUMMY: all clean install
