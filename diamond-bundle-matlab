@@ -25,13 +25,13 @@ def clean_macro_name(name):
 if __name__ == '__main__':
     parser = OptionParser(
         usage='%prog [-h] [options] eval-macro [supporting-files...]',
-        description='Package a Diamond filter written in MATLAB into an OpenDiamond search bundle.',
+        description='Package a MATLAB macro into an OpenDiamond predicate.',
     )
     parser.add_option('-o', dest='outfile', metavar='outfile',
             help='path to output file')
     parser.add_option('-n', dest='name', metavar='display-name',
-            default='MATLAB Search',
-            help='display name for search')
+            default='MATLAB Predicate',
+            help='display name for predicate')
     parser.add_option('-i', dest='init_file', metavar='init-macro',
             help='path to initialization macro')
     opts, args = parser.parse_args()
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     eval = clean_macro_name(eval_file)
     outfile = opts.outfile
     if outfile is None:
-        outfile = os.path.splitext(eval_file)[0] + '.search'
+        outfile = os.path.splitext(eval_file)[0] + '.pred'
     files = list(args)
     if opts.init_file is not None:
         files.append(opts.init_file)
