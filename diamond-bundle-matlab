@@ -42,7 +42,7 @@ if __name__ == '__main__':
     eval = clean_macro_name(eval_file)
     outfile = opts.outfile
     if outfile is None:
-        outfile = os.path.splitext(eval_file)[0] + '.pred'
+        outfile = os.path.splitext(os.path.basename(eval_file))[0] + '.pred'
     files = list(args)
     if opts.init_file is not None:
         files.append(opts.init_file)
