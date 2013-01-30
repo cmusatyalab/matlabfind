@@ -108,7 +108,7 @@ static void populate_rgbimage(struct mm *mm, Engine *eng,
   const size_t *dims;
   dims = mm->mxGetDimensions(uint8_img);
   printf("[ %d %d %d ]\n", dims[0], dims[1], dims[2]);
-  assert(dims[2] == matlab_bytes_per_pixel);
+  assert(dims[2] == (size_t) matlab_bytes_per_pixel);
 
   int h = dims[0];
   int w = dims[1];
