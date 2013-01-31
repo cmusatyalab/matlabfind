@@ -107,7 +107,7 @@ static void populate_rgbimage(struct mm *mm, Engine *eng,
 
   const size_t *dims;
   dims = mm->mxGetDimensions(uint8_img);
-  printf("[ %d %d %d ]\n", dims[0], dims[1], dims[2]);
+  printf("[ %zd %zd %zd ]\n", dims[0], dims[1], dims[2]);
   assert(dims[2] == (size_t) matlab_bytes_per_pixel);
 
   int h = dims[0];
@@ -148,7 +148,7 @@ static void populate_rgbimage(struct mm *mm, Engine *eng,
     }
   }
 
-  printf("writing rgbimage of len: %d\n", len);
+  printf("writing rgbimage of len: %zd\n", len);
   lf_write_attr(ohandle, "_rgb_image.rgbimage", len, diamond_buf);
 
   free(diamond_buf);
@@ -346,9 +346,9 @@ static double f_eval_matlab_exec (lf_obj_handle_t ohandle, void *filter_args)
    struct mm *mm = &inst->mm;
 
    mxArray *matlab_img = create_matlab_image(mm, ohandle, inst->is_codec);
-   printf("number of mxArray elements: %d\n",
+   printf("number of mxArray elements: %zd\n",
 	  mm->mxGetNumberOfElements(matlab_img));
-   printf("number of mxArray dimensions: %d\n",
+   printf("number of mxArray dimensions: %zd\n",
 	  mm->mxGetNumberOfDimensions(matlab_img));
    printf("mxArray class: %d\n",
 	  mm->mxGetClassID(matlab_img));
