@@ -19,4 +19,4 @@ and/or `FILTER_DIR`.
 Running
 -------
 
-MATLAB must be installed on the Diamond servers.
+MATLAB and csh must be installed on the Diamond servers.
