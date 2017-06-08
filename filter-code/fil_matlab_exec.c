@@ -186,7 +186,7 @@ void extract_zip(const void *data, size_t len)
      }
    }
    g_assert(ret == ARCHIVE_EOF);
-   g_assert(!archive_read_finish(arch));
+   g_assert(!archive_read_free(arch));
 }
 
 static
